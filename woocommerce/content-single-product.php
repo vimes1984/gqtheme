@@ -10,10 +10,12 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+global $product;
+
 ?>
 
-<div itemscope itemtype="<?php echo woocommerce_get_product_schema(); ?>" id="product-<?php the_ID(); ?>" <?php post_class(); ?>>
-	<div class="row">
+<div itemscope itemtype="<?php echo woocommerce_get_product_schema(); ?>" id="product-<?php the_ID(); ?>" <?php post_class(); ?> ng-controller="singleprodpagecontroller">
+	<div class="row" ng-init="postid = '<?php echo $product->id; ?>' ">
 		<?php
 			/**
 			 * woocommerce_before_single_product hook
@@ -37,41 +39,53 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 				</div>
 				<div class="row">
 					<div class="large-6 columns small-12">
-						<?php woocommerce_show_product_images(); ?>	
+						<?php woocommerce_show_product_images(); ?>
 					</div>
 					<div class="large-6 columns small-12">
 						<div class="row">
-							<div class="large-6 columns">
+							<div class="large-12 columns">
 								<?php woocommerce_template_single_price(); ?>
-								<p></p>
 								<p>	<?php woocommerce_template_single_rating(); ?></p>
 							</div>
 						</div>
 						<div class="row">
 							<div class="large-12 columns">
-								<h4>Add to cart:</h4>
+								<?php if ( $product->is_in_stock() ){ ?>
+								<h4 >Add to cart:</h4>
+								<?php } ?>
 								<?php woocommerce_template_single_add_to_cart(); ?>
 							</div>
 						</div>
 					</div>
 				</div>
 				<div class="row">
-					<div class="large-12 columns panel callout radius">
-						<?php the_content(); ?>			
+					<div class="large-12 columns ">
+						<hr/>
+							<?php the_content(); ?>
+						<hr/>
 					</div>
 				</div>
-				<div class="seperator"></div>
 				<div class="row">
 					<div class="large-12 columns">
 						<?php get_template_part('woocommerce/single-product/tabs/additional-information'); ?>
 					</div>
-				</div>				
+				</div>
 			</div>
 
 		<div class="large-3 columns">
 			<div class="row">
 				<div class="large-12 columns">
+					<?php dynamic_sidebar("product-above-upsells"); ?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="large-12 columns">
 					<?php woocommerce_upsell_display(); ?>
+				</div>
+			</div>
+			<div class="row">
+				<div class="large-12 columns">
+					<?php dynamic_sidebar("product-below-upsells"); ?>
 				</div>
 			</div>
 			<div class="row">
@@ -80,7 +94,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 				</div>
 			</div>
 		</div>
-		
+
 		<meta itemprop="url" content="<?php the_permalink(); ?>" />
 
 

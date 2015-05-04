@@ -6,7 +6,11 @@ get_header(); ?>
 <?php get_template_part('parts/page-banner'); ?>
 
 <div class="row">
-    <div class="small-12 large-8 large-push-4 columns" role="main">
+
+    <div class="small-12 large-4 columns" role="main">
+      <?php dynamic_sidebar("left"); ?>
+    </div>
+    <div class="small-12 large-8 columns" role="main">
 
         <?php do_action('foundationPress_before_content'); ?>
 
@@ -30,6 +34,5 @@ get_header(); ?>
         <?php do_action('foundationPress_after_content'); ?>
 
     </div>
-    <?php get_sidebar('left'); ?>
 </div>
 <?php get_footer(); ?>

@@ -2,28 +2,104 @@
  (function ($) {
     // here goes your custom code
 	//$(".owl-carousel").owlCarousel();
-	console.log($);
 	// Joyride demo
 	$('#start-jr').on('click', function() {
 	  $(document).foundation('joyride','start');
 	});
 	jQuery(document).foundation();
+
+
 }(jQuery));
 
-var gqApp =  angular.module('gqapp', ['iso.directives', 'angularSpinner', 'ui-rangeSlider']);
-gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinnerService, $timeout ) {
+var gqApp =  angular.module('gqapp', ['iso.directives', 'angularSpinner', 'ui-rangeSlider', 'img-src-ondemand']);
+gqApp.controller('singleprodpagecontroller', function ($scope, $sce, getsingle ) {
+  //default values
+  $scope.currentvariation = {
+    var: '',
+    vartype: '',
+    tax: '',
+
+  };
+  $scope.salesprice = '';
+
+    $scope.resetvars = function(){
+      $scope.currentvariation = {
+        var: '',
+        vartype: '',
+        tax: '',
+
+      };
+    };
+    $scope.changevar = function(attname){
+
+        $scope.currentvariation.tax = attname;
+
+        angular.forEach($scope.singledata.available_variations, function(value, key){
+
+          if(value.attributes[attname] === $scope.currentvariation.vartype){
+            $scope.currentvariation.var = value;
+            //no sales
+            if(value.display_regular_price === value.display_price){
+              $scope.price      = value.display_regular_price;
+              $scope.salesprice = '';
+            }else{
+
+              $scope.price      = value.display_price;
+              $scope.salesprice = value.display_regular_price;
+              $scope.availtext  = value.stock_text;
+
+            }
+
+          }else if($scope.currentvariation.vartype === ''){
+            $scope.currentvariation.var = '';
+
+          }
+
+        });
+
+
+    }
+    $scope.to_trusted = function(html_code) {
+        return $sce.trustAsHtml(html_code);
+    };
+    $scope.$watch("postid", function(){
+          //Shop loop
+          getsingle.getsingle($scope)
+          .success(function(data, status, headers, config){
+              console.log(data);
+              $scope.singledata = data;
+              $scope.price = data.price.price;
+              if(data.available_variations === 'none'){
+
+                $scope.availtext = data.stock_text;
+
+              }else{
+
+
+              }
+      })
+      .error(function(data, status, headers, config) {
+        $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
+
+      });
+  });
+
+});
+gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinnerService, $timeout, $location ) {
         // set available range efault this get's overwrote the moment the loop is returned
         $scope.minRing         = 0;
         $scope.maxRing         = 1999;
         $scope.minLength       = 0;
-        $scope.maxLength       = 1999;        
+        $scope.maxLength       = 1999;
         // default the user's values to the available range
         $scope.userMinRing     = $scope.minRing;
         $scope.userMaxRing     = $scope.maxRing;
         $scope.userMinLength   = $scope.minLength;
-        $scope.userMaxLength   = $scope.maxLength;        
+        $scope.userMaxLength   = $scope.maxLength;
         $scope.filters      = '';
-        $scope.filtercat    = '';
+        $scope.filtercat    = ' ';
+
+
         usSpinnerService.spin('spinner-1');
 
         $scope.startSpin = function(){
@@ -33,7 +109,7 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
             usSpinnerService.stop('spinner-1');
         }
         $scope.removeallother = function removeallother(filtercat){
-            
+
             angular.forEach(angular.element(".filterterms"), function(value, key){
                  var a = angular.element(value);
                  a.removeClass('success');
@@ -52,7 +128,7 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
         $scope.limitfunctyion = function limitfunctyion($index){
 
-            if($index > 3 && $index <= 7){
+            if($index > 4 && $index <= 8){
                 return true;
             }else{
                 return false;
@@ -67,7 +143,7 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
             $scope.userMinRing     = $scope.minRing;
             $scope.userMaxRing     = $scope.maxRing;
             $scope.userMinLength   = $scope.minLength;
-            $scope.userMaxLength   = $scope.maxLength;            
+            $scope.userMaxLength   = $scope.maxLength;
             console.log($scope);
             angular.forEach(angular.element(".filterterms"), function(value, key){
                  var a = angular.element(value);
@@ -85,16 +161,64 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
         $scope.applyfilter = function(){
             $scope.$emit('iso-option', {filter:  '*'});
         };
+        $scope.urlhashedfilter = function(){
+          $scope.$emit('iso-option', {filter: $scope.filters});
+          angular.forEach()
+
+        };
         $scope.to_trusted = function(html_code) {
             return $sce.trustAsHtml(html_code);
         };
 
+        $scope.$watch('location.url()', function(){
+
+            if($location.url() != ''){
+              var geturl       = $location.url().replace('/', '');
+              var parseurl     = geturl.replace(/&/g, '.');
+              var split        = parseurl.split('.');
+              var join         = ' ' + split.join(', .')
+              var filters      = join.replace(' , ', '');
+              $scope.filters   = filters;
+            }else{
+
+              $scope.filters = '';
+
+            }
+
+        });
         $scope.chaindedfilters = function chaindedfilters(filterterm){
-            
+            var checkexits = $location.url().indexOf(filterterm);
+            if( checkexits === -1){
+              $location.url($location.url() + '&' + filterterm);
+
+            }else{
+              var parseurl = $location.url().replace('&'+filterterm, '');
+              $location.url(parseurl);
+
+            }
+
+
             $scope.checkforstringstart = $scope.filters.indexOf(filterterm);
             if($scope.checkforstringstart != -1){
-                
-                $scope.filters = $scope.filters.replace("."+filterterm, "");                
+
+                var checkforstringstart     = $scope.filters.indexOf(", ."+filterterm);
+                var checkforstringstarttwo  = $scope.filters.indexOf(" , ."+filterterm);
+                var checkforstringstartthr  = $scope.filters.indexOf("."+filterterm+",");
+
+
+                if(checkforstringstart != -1){
+                  $scope.filters = $scope.filters.replace(", ."+filterterm, "");
+                }else if(checkforstringstarttwo != -1){
+                  $scope.filters = $scope.filters.replace(" , ."+filterterm, "");
+                }else if(checkforstringstartthr != -1){
+                  $scope.filters = $scope.filters.replace(" ."+filterterm + ", ", "");
+                }else{
+                  $scope.filters = $scope.filters.replace("."+filterterm, "");
+
+                }
+
+
+
 
                 if($scope.filters.length == 0){
                     $scope.$emit('iso-option', {filter:  '*'});
@@ -104,7 +228,8 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
 
             }else{
-                $scope.filters = $scope.filtercat + $scope.filters + '.'+ filterterm +'' ;
+                $scope.filters = $scope.filtercat + $scope.filters + ', .'+ filterterm +'' ;
+                $scope.filters = $scope.filters.replace(' , ', '');
                 $scope.$emit('iso-option', {filter:  $scope.filters});
             }
 
@@ -113,34 +238,53 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
             $scope.$emit('iso-option', {filter:  '*'});
         });
 
+            //Shop loop
+        getshop.getshop($scope)
+            .success(function(data, status, headers, config){
+                $scope.shoploop = data;
+                //console.log(data);
+                usSpinnerService.stop('spinner-1');
+                if($scope.filters == ''){
+                  $timeout($scope.applyfilter, 50);
+
+                }else{
+
+                  $timeout($scope.urlhashedfilter, 100);
+
+                }
+
+        })
+        .error(function(data, status, headers, config) {
+          $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
+
+    });
 		//watch category input
 	    $scope.$watch("category", function(){
-            //Shop loop
-            getshop.getshop($scope)
-                .success(function(data, status, headers, config){
-                    $scope.shoploop = data;
 
-                    usSpinnerService.stop('spinner-1');
-                    $timeout($scope.applyfilter, 500);
 
-                    console.log(data);
-            
-		        })
-		        .error(function(data, status, headers, config) {
-				    alert('UUUUUU YOU BROKE IT!!! refresh the page and try again please.');
-				});
-            $scope.$emit('iso-option', {filter:  '*'});
-		
+
 		});
 });
 gqApp.factory('getshop', function($http){
     return {
         getshop: function($scope) {
             return  $http({
-                        method: 'POST', 
+                        method: 'POST',
                         url: '/wp-admin/admin-ajax.php',
                         data: $scope.category,
                         params: { 'action': 'shop_page_loop', }
+                    });
+        }
+    };
+});
+gqApp.factory('getsingle', function($http){
+    return {
+        getsingle: function($scope) {
+            return  $http({
+                        method: 'POST',
+                        url: '/wp-admin/admin-ajax.php',
+                        data: $scope.postid,
+                        params: { 'action': 'single_page', }
                     });
         }
     };
@@ -154,7 +298,7 @@ gqApp.factory('getcatsparent', function($http) {
     return {
         getcatsparent: function(){
             return  $http({
-                        method: 'GET', 
+                        method: 'GET',
                         url: '/wp-admin/admin-ajax.php',
                         params: { 'action': 'cats_loop'}
                     });
@@ -166,11 +310,11 @@ gqApp.factory('getcatschild', function($http) {
     return {
         getcatschild: function(){
             return  $http({
-                        method: 'GET', 
+                        method: 'GET',
                         url: '/wp-admin/admin-ajax.php',
                         data: $scope,
                         params: { 'action': 'cats_child_loop' }
-                    }); 
+                    });
         }
 
     };
@@ -179,10 +323,10 @@ gqApp.factory('getcatsparent', function($http) {
     return {
         getcatsparent: function(){
             return  $http({
-                        method: 'GET', 
+                        method: 'GET',
                         url: '/wp-admin/admin-ajax.php',
                         params: { 'action': 'cats_loop'}
-                    }); 
+                    });
         }
 
     };
@@ -194,7 +338,7 @@ gqApp.filter("minmaxfilter", function() {
         var to = parseInt(to);
         var result = [];
         angular.forEach(items, function(value, key){
-            if(value.ring_gauge != "NULL"){            
+            if(value.ring_gauge != "NULL"){
                 var price = parseInt(value.ring_gauge);
                 if(price >= from && price <= to){
                     result.push(value);
@@ -215,7 +359,7 @@ gqApp.filter("fractionit", function() {
                 var numb        = numb.toString();
                 var getpredec   = numb.split(".");
                 var getdecimal  = parseFloat( "0." + getpredec[1] );
-                var frac        = getdecimal; 
+                var frac        = getdecimal;
                 var returnvalue = frac * 8;
                 var concat      = returnvalue.toString() + "/8";
                 return concat;
@@ -267,6 +411,33 @@ gqApp.directive("markable", function() {
         }
     };
 });
+
+gqApp.directive('filterterms',['$location', function(location){
+    // Runs during compile
+    return {
+        restrict: 'C', // E = Element, A = Attribute, C = Class, M = Comment
+        link: function($scope, iElm, iAttrs, controller) {
+                    // DO SOMETHING
+            var geturl       = location.url().replace('/', '');
+            var parseurl     = geturl.split('&');
+            angular.forEach(parseurl, function(value, key){
+              if(value != ""){
+
+                  var checkclass   = iElm.context.className.indexOf(value);
+
+                  if(checkclass > -1){
+
+                    iElm.addClass('success');
+
+                  }
+              }
+
+            });
+
+
+        }
+    };
+}]);
 /**Config*/
 gqApp.config(['usSpinnerConfigProvider', function (usSpinnerConfigProvider) {
     usSpinnerConfigProvider.setDefaults({
@@ -285,4 +456,7 @@ gqApp.config(['usSpinnerConfigProvider', function (usSpinnerConfigProvider) {
               top: '50%', // Top position relative to parent
               left: '50%' // Left position relative to parent
     });
+}]);
+gqApp.config(['ImgSrcOndemandProvider', function(ImgSrcOndemandProvider) {
+  ImgSrcOndemandProvider.offset(100);
 }]);

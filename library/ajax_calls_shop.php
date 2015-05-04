@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dance Energy Generic
  *
@@ -60,7 +61,7 @@ class ajaxclass{
 	 *
 	 * @since     1.0.0
 	 */
-	private function __construct() {
+	public function __construct() {
 				// Load plugin text domain
 		//shop page and categories
 		add_action('wp_ajax_nopriv_cats_loop', array($this, 'cats_loop') );
@@ -69,6 +70,8 @@ class ajaxclass{
 		add_action( 'wp_ajax_cats_child_loop', array($this,  'cats_child_loop') );
 		add_action('wp_ajax_nopriv_shop_page_loop', array($this, 'shop_page_loop') );
 		add_action( 'wp_ajax_shop_page_loop', array($this,  'shop_page_loop') );
+		add_action('wp_ajax_nopriv_single_page', array($this, 'single_page') );
+		add_action( 'wp_ajax_single_page', array($this,  'single_page') );
 	}
 
 	/**
@@ -88,13 +91,13 @@ class ajaxclass{
 		return self::$instance;
 	}
 	/****
-	 	* 
+	 	*
 		*Cart Page
 	 	***/
 	public function cats_loop() {
 		// Include the client library
 		$catreturn = array();
-		
+
 		$categories = get_terms( 'product_cat', 'orderby=count&hide_empty=0' );
 
 		foreach ($categories as $key => $value) {
@@ -107,12 +110,12 @@ class ajaxclass{
 		}
 
 			$catreturn = json_encode( $catreturn );
-			
+
 			echo $catreturn;
 		die(); // this is required to return a proper result
 	}
 	/**
-	 * 
+	 *
 	 */
 	public function cats_child_loop() {
 		// Include the client library
@@ -127,48 +130,255 @@ class ajaxclass{
 
 			}
 			$catreturn = json_encode( $catreturn );
-			
+
 			echo $catreturn;
 		die(); // this is required to return a proper result
 	}
-	/**
-	 * 
-	 */
-	public function shop_page_loop() {
-		global $product;
-		
+	public function single_page(){
+		global $product, $wpdb;
 
-		$reffer			= $_SERVER['HTTP_REFERER'];
-		$exploded 		= explode("/", $reffer );
-		$catslug		= end($exploded);
-		//var_dump($exploded);
-		//not in use but may need to be...
-		$request_body 	= file_get_contents( 'php://input' );
-
-		$args 			= array( 'post_type' => 'product', 'product_cat' => $request_body, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
-        $decodeit     	= json_decode( $request_body );
-		$query 			= new WP_Query( $args );
-	  	$justmeta 		= array( );
-	  	$justcats 		= array( );
-	  	$justterms 		= array( );
+			$request_body 	= file_get_contents( 'php://input' );
+			$args 					= array( 'post_type' => 'product', 'p' => $request_body, 'posts_per_page' => '1', 'post_status'=> 'publish' );
+    	$decodeit     	= json_decode( $request_body );
+			$query 					= new WP_Query( $args );
+	  	$justmeta 			= array( );
+	  	$justcats 			= array( );
+	  	$justterms 			= array( );
 	  	$prodsandmeta 	= array( );
+
 
 		foreach ($query->posts as $key => $value) {
 			global $product;
 
 		 	$classes 			= '';
 		 	$classesterm 		= '';
-		 	$prodsandmeta[$key] = $value;		 	
-		 	$post_id 			= $value->ID;
-			$extended 			= new WC_Product($post_id);
-			$getprodprice 		= $this->get_product_price($post_id);
-			$image 				= wp_get_attachment_image_src( get_post_thumbnail_id( $post_id ), 'single-post-thumbnail' );	 	
-			$getprodmet 		= get_post_meta( $post_id );
-			$get_prod_atts  	= $this->get_products_atts($post_id);
 
-			//Not In use 
-		 	//$categories 		= get_the_terms( $post_id, 'product_cat' );
-			//$posttags 			= wp_get_object_terms($post_id, 'product_tag');			
+		 	$prodsandmeta				 = $value;
+		 	$post_id 						= $value->ID;
+			$extended 					= get_product($post_id);
+			$getprodmet 				= get_post_meta( $post_id );
+			$onsale 						= $extended->is_on_sale();
+			$getprodprice 			= $this->get_product_price($post_id, $extended->product_type, $onsale);
+			if($extended->product_type == 'simple'){
+
+				$getprodavail				= $this->getproductavail($post_id, $extended->product_type, round($getprodmet['_stock'][0], 0), $getprodmet['_backorders'][0] );
+				$prodsandmeta->stock_text							= $getprodavail;
+				$available_variations = 'none';
+
+			}
+
+
+			if($extended->product_type === 'variable'){
+				$available_variations = $extended->get_available_variations();
+				foreach($available_variations as $key => $value){
+						$available_variations[$key]['stock_text']	= $this->getproductavail($value['variation_id'], 'variation', round($getprodmet['_stock'][0], 0), $getprodmet['_backorders'][0] );
+
+				}
+			}else{
+				$available_variations = 'none';
+			}
+
+			// IN USE PRODUCT META
+
+		 	foreach ($getprodmet as $subkey => $subvalue){
+
+		 		$justmeta[str_replace('-', '_', $subkey)] = $subvalue[0];
+
+		 	}
+			$prodsandmeta->available_variations		= $available_variations;
+		 	$prodsandmeta->product_meta 					= $justmeta;
+		 	$prodsandmeta->price 									= $getprodprice;
+
+
+		}
+		ob_start('ob_gzhandler');
+		$backtoangular = json_encode( $prodsandmeta );
+
+
+		// return $backtoangular;
+		echo $backtoangular;
+
+		die(); // this is required to return a proper result
+
+	}
+	/**
+	 * Get stock extended
+	 */
+	public function getproductavail($post_id = '', $product_type ='', $stock = '', $backorders){
+		$availtext = '';
+
+
+		switch ($product_type) {
+			case "simple":
+				# code...
+				if($backorders == 'no' && $stock == 0){
+
+					$availtext = 'Sold Out';
+
+				}elseif($backorders == 'yes' && $stock == 0){
+
+					$availtext = 'Sold Out <br/> (Accepting Back Orders)';
+
+				}elseif($backorders == 'yes' && $stock > 0) {
+
+					$availtext = $stock . ' In Stock';
+
+				}elseif( $backorders == 'no' && $stock > 0){
+
+					$availtext = $stock . ' In Stock';
+
+				}
+
+
+				break;
+			case "variation":
+				# code...
+				$deductornot 	= get_post_meta( $post_id, '_deductornot', true );
+				$deductamount 	= get_post_meta( $post_id, '_deductamount', true );
+
+				if($backorders == 'no' && $stock == 0){
+
+					$availtext = 'Sold Out';
+
+				}elseif($backorders == 'yes' && $stock == 0){
+
+					$availtext = 'Sold Out <br/> (Accepting Back Orders)';
+
+				}elseif($backorders == 'yes' && $stock > 0){
+
+
+					if($deductornot == "yes"){
+						$getstock = $stock / $deductamount;
+
+						if($getstock < 1){
+							$availtext =  'Sold out  <br/> (Accepting Back Orders)';
+
+						}else{
+							$availtext =  floor($getstock) . ' In Stock';
+
+						}
+
+					}else{
+
+						$availtext = $stock . ' In Stock';
+
+
+					}
+				}elseif($backorders == 'no' && $stock > 0){
+
+
+					if($deductornot == "yes"){
+						$getstock = $stock / $deductamount;
+
+						if($getstock < 1){
+							$availtext =  'Sold out';
+
+						}else{
+							$availtext =  floor($getstock) . ' In Stock';
+
+						}
+
+					}else{
+
+						$availtext = $stock . ' In Stock';
+
+
+					}
+				}
+
+				break;
+
+			default:
+				if($backorders == 'no' && $stock == 0){
+
+					$availtext = 'Sold Out';
+
+				}elseif($backorders == 'yes' && $stock == 0){
+
+					$availtext = 'Sold Out <br/> (Accepting Back Orders)';
+
+				}elseif($backorders == 'yes' && $stock > 0) {
+
+					$availtext = $stock . ' In Stock';
+
+				}elseif( $backorders == 'no' && $stock > 0){
+
+					$availtext = $stock . ' In Stock';
+
+				}
+				break;
+		}
+
+		return $availtext;
+	}
+	/**
+	 *
+	 */
+	public function shop_page_loop($cat = '') {
+		global $product, $wpdb;
+
+
+		$reffer			= $_SERVER['HTTP_REFERER'];
+		$catpreg  	= preg_match('#/c/(.*)/#', $reffer, $matches);
+		$exploded 		= explode("/", $reffer );
+		$catslug		= end($exploded);
+
+		//not in use but may need to be...
+		$request_body 	= file_get_contents( 'php://input' );
+
+				$args 					= array( 'post_type' => 'product', 'product_cat' => $matches[1], 'posts_per_page' => '-1', 'post_status'=> 'publish' );
+				/*
+			if($cat != ''){
+				$args 					= array( 'post_type' => 'product', 'product_cat' => $cat, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
+			}else{
+				$args 					= array( 'post_type' => 'product', 'product_cat' => $request_body, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
+
+			}
+			*/
+    	$decodeit     	= json_decode( $request_body );
+			$query 					= new WP_Query( $args );
+	  	$justmeta 			= array( );
+	  	$justcats 			= array( );
+	  	$justterms 			= array( );
+	  	$prodsandmeta 	= array( );
+			$post_ids 			= array( );
+			$thumb_ids 			= array( );
+
+		foreach ($query->posts as $key => $value) {
+			global $product;
+
+		 	$classes 			= '';
+		 	$classesterm 		= '';
+
+		 	$prodsandmeta[$key] = new stdClass();
+		 	$post_id 						= $value->ID;
+			$extended 					= get_product($post_id);
+			//$getprodmet 				= get_post_meta( $post_id );
+			$getprodmetatts 		= get_post_meta( $post_id, '_product_attributes', true);
+
+			if($getprodmetatts != ''){
+				$arraysort 					= $this->get_attributes( $getprodmetatts );
+				$get_prod_atts  		= $this->get_products_atts_withoutleak_test($post_id, $arraysort);
+			}else{
+				$get_prod_atts  		= NULL;
+
+			}
+
+			if($get_prod_atts != NULL){
+				usort($get_prod_atts, array($this, 'sort_by') );
+			}else{
+				$get_prod_atts = array();
+			}
+
+			$getprodprice 			= $this->get_product_price($post_id, $extended->product_type);
+
+			$imagesrc 										= wp_get_attachment_image_src(get_post_meta( $post_id, '_thumbnail_id', true) , 'medium');
+			if($imagesrc != false){
+				$prodsandmeta[$key]->prod_img = $imagesrc[0];
+			}else{
+				$prodsandmeta[$key]->prod_img = '/wp-content/plugins/woocommerce/assets/images/placeholder.png';
+			}
+
 
 			//IN USE Product attributes
 			if($get_prod_atts != NULL){
@@ -183,96 +393,73 @@ class ajaxclass{
 
 				}
 			}
-			/*
-				//NOT IN USE TO GET AND FILTER BY TAGS
-				foreach ($posttags as $subtermkey => $subtermvalue) {
-					$classes 	= $classes . ' ' . $subtermvalue->slug;
-					$justterms 	=  $subtermvalue;
-				}
-			 	
-			 	//NOT IN USE TO GET AND FILTER THE CATS 
-			 	if($categories){
 
-			 		foreach ($categories as $subcatkey => $subcatvalue) {
-			 		
-			 			$classes = $classes . ' ' . $subcatvalue->slug;
-			 			$justcats[$subcatkey] = $subcatvalue;
-
-			 		}
-			 	}
-			*/
-
-			// IN USE PRODUCT META
-		 	foreach ($getprodmet as $subkey => $subvalue){
-
-		 		$justmeta[str_replace('-', '_', $subkey)] = $subvalue[0];
-		 	
-		 	}
-			$prods_atts 						= $this->get_attributes($post_id, $extended->get_attributes());
 			$cigar_length 						= "NULL";
 			$ring_gauge 						= "NULL";
-			foreach ($prods_atts as $key_atts => $value_atts) {
+
+			foreach ($get_prod_atts as $key_atts => $value_atts) {
 				# code...
-				switch ($value_atts->name) {
+
+				switch ($value_atts['parentname']) {
 					case "Ring Gauge":
 						# code...
-						$ring_gauge = str_replace(array("\n","\r\n"), "",  strip_tags( $value_atts->value ) );
-						
-						
+						$ring_gauge =  str_replace(array("\n","\r\n"), "",  strip_tags( reset($value_atts) ) );
+
+
 						break;
 					case "Length":
 						# code...
-						$cigar_length = floatval( Deci_Con( strip_tags( $value_atts->value ) ) );
+						$cigar_length = floatval( Deci_Con( strip_tags( reset($value_atts) ) ) );
 						break;
-										
+
 					default:
-						
+
 						break;
 				}
 			}
-		 	//$prodsandmeta[$key]->prod_cat 		= $justcats;
-		 	//$prodsandmeta[$key]->classesterm 	= $classesterm;
-		 	$prodsandmeta[$key]->product_att 	= $prods_atts;
-		 	$prodsandmeta[$key]->ring_gauge 	= $ring_gauge;
+
+
+			$prodsandmeta[$key]->product_attnew = $get_prod_atts;
+		 	$prodsandmeta[$key]->product_title 	= $value->post_title;
+		 	$prodsandmeta[$key]->ring_gauge 		= $ring_gauge;
 		 	$prodsandmeta[$key]->cigar_length 	= $cigar_length;
-		 	$prodsandmeta[$key]->classes 		= $classes;
-		 	$prodsandmeta[$key]->product_meta 	= $justmeta;
-		 	$prodsandmeta[$key]->prod_term 		= $justterms;
-		 	$prodsandmeta[$key]->permalink 		= get_permalink( $post_id );
-		 	$prodsandmeta[$key]->price 			= $getprodprice;
+		 	$prodsandmeta[$key]->classes 				= $classes;
+			//$prodsandmeta[$key]->product_meta		= $justmeta;
+		 	$prodsandmeta[$key]->wpcf_show_attributes	= get_post_meta( $post_id, 'wpcf-show-attributes', true);
+		 	//$prodsandmeta[$key]->prod_term 			= $justterms;
+		 	$prodsandmeta[$key]->permalink 			= get_permalink( $post_id );
+		 	$prodsandmeta[$key]->price 					= $getprodprice;
 
-		 	if( $image === false ){
-		 		$prodsandmeta[$key]->prod_img = '/wp-content/plugins/woocommerce/assets/images/placeholder.png';
-		 	}else{
-		 		$prodsandmeta[$key]->prod_img = $image[0];
-		 	}
 
-		 	//var_dump($key);
 		}
 
 		$backtoangular = json_encode( $prodsandmeta );
-		
+
+
+		// return $backtoangular;
 		echo $backtoangular;
-		
+
 		die(); // this is required to return a proper result
 	}
+	public function sort_by($a, $b){
+    return $a['position'] - $b['position'];
+
+	}
 	/**
-	 * 
+	 *
 	 */
-	public function check_for_sample_type($prod_id){
-		$prods_atts 	= $this->get_products_atts($prod_id);
-		$getsample 		= $prods_atts["pa_tobacco-pack-size"]["10g"];
+	public function check_for_sample_type($prods_atts){
 
 		if(isset( $prods_atts["pa_tobacco-pack-size"]["10g"] ) ){
 			return true;
 		}else{
 			return false;
 		}
-		
+
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public function get_product_variations($prod_id){
 		$product 		= get_product( $prod_id );
@@ -282,38 +469,37 @@ class ajaxclass{
 			# code...
 			//var_dump($value);
 			if($value["price_html"]){
-			
+
 				$fresharray[$key] = $value["price_html"];
-				
+
 			}
 
 		}
 		$clear = preg_replace("/[^0-9,.]/", '', strip_tags($fresharray[1]));
 		return $clear;
 	}
+	public function check_if_sale(){
 
+
+	}
 	/**
-	 * 
+	 *
 	 */
-	public 	function get_product_price($prod_id){
-		$product 		= get_product( $prod_id );
+	public 	function get_product_price($prod_id, $productType, $onsale = false){
 		$ID 			= $prod_id;
-		$productType 	= $product->is_type('simple');
 		$price 			= '';
-		$checksample 	= $this->check_for_sample_type($prod_id);
 		$arrayreturn 	= array();
-		//var_dump($product);
 
-		if($product->is_type('simple')){
+		if($productType == 'simple'){
 
 			$price = get_post_meta( $ID, '_regular_price', single );
-			$arrayreturn 	= array('price' => $price,'type' => 'simple' );
+			$arrayreturn 	= array('price' => $price,'type' => 'simple','onsale' => $onsale );
 
 			return $arrayreturn;
 
 
 
-		}elseif ($product->is_type('variable') && $checksample) {
+		}elseif ($productType == 'variable' && $checksample) {
 
 			$price 	= $this->get_product_variations( $prod_id );
 
@@ -321,7 +507,7 @@ class ajaxclass{
 
 			return $arrayreturn;
 
-		}elseif ($product->is_type('variable')) {
+		}elseif ($productType == 'variable') {
 
 			$price = get_post_meta( $ID, '_min_variation_price', single );
 			$arrayreturn 	= array('price' => $price,'type' => 'variable' );
@@ -339,59 +525,103 @@ class ajaxclass{
 
 
 	}
-	/**
-	 * 
-	 */
-	public function get_products_atts($post_id = 0){
-		$extended = new WC_Product($post_id);
-		$attributes = $extended->get_attributes();
-		$args =  array('fields' => 'all' );
-
-		foreach ($attributes as $attribute) {
-		# code...
-		$values = wc_get_product_terms( $post_id, $attribute['name'], $args );
-
-			foreach ($values as $keysub => $valuesub) {
-			# code...
-				$prods_atts[$attribute['name']][$valuesub->slug] = $valuesub->slug;
-			}
-		}
-
-		return $prods_atts;
+	public function get_attributes($product_attributes) {
+	    return apply_filters( 'woocommerce_get_product_attributes', (array) maybe_unserialize( $product_attributes ) );
 	}
 	/**
-	 * 
+	 *
 	 */
-	public function get_attributes($post_id, $attributes){
-		$key = 0;
-		$attrs =  array();
+		public function get_products_atts_withoutleak_test($post_ids = '', $taxonomies) {
 
-		foreach ( $attributes as $attribute ){
-			# code...
-			$attrs[$key] 		= new stdClass();
-			if ( $attribute['is_taxonomy'] ) {
+				//var_dump($taxonomies);
 
-					$values 			= wc_get_product_terms( $post_id, $attribute['name'], array( 'fields' => 'names' ) );
-					
-					$attrs[$key]->value = ( apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values ) );
-					$attrs[$key]->name 	= wc_attribute_label( $attribute['name'] ); 
+				$i = 0;
+				foreach ($taxonomies as $key => $value) {
+					$taxnames[$i] = $value["name"];
+					$i++;
+				}
 
-				} else {
-
-					// Convert pipes to commas and display values
-					$values = array_map( 'trim', explode( WC_DELIMITER, $attribute['value'] ) );
-
-					$attrs[$key]->name 	= wc_attribute_label( $attribute['name'] ); 
-					$attrs[$key]->value = apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
+				$terms = wp_get_object_terms($post_ids, $taxnames, array('orderby' => 'term_order', 'order' => 'DESC', 'fields' => 'all'));
 
 
-			}
 
-			$key++;
+		            if ( !empty( $terms ) ) {
+		                $i = 0;
+		                foreach ( $terms as $term ){
+												$getparenttax = get_taxonomy( $term->taxonomy );
+
+
+												$out[$term->taxonomy][$term->slug] 		= $term->slug;
+												//Need to redo this it causes one db call per item
+												$out[$term->taxonomy]['parentname'] 	= $getparenttax->labels->name;
+												$out[$term->taxonomy]['name'] 				= $term->name;
+												$out[$term->taxonomy]['slug'] 				= $term->name;
+												if($taxonomies[$term->taxonomy]["position"] != NULL){
+		                    	$out[$term->taxonomy]['position']			= $taxonomies[$term->taxonomy]["position"];
+												}else{
+													$out[$term->taxonomy]['position'] 	= 0;
+												}
+		                    $i ++;
+		                }
+		            }
+
+
+
+		    return $out;
 		}
-		return $attrs;
-	
+/**
+ *
+ */
+	public function get_products_atts_withoutleak($post_id = '', $post_type = 'product') {
+
+	    $out = array();
+			$args = array('orderby' => 'count', 'order' => 'ASC', 'fields' => 'all');
+			//$args['menu_order'] = isset( $args['order'] ) ? $args['order'] : 'ASC';
+	    // get post type taxonomies
+	    $taxonomies = get_object_taxonomies($post_type, 'objects');
+	    foreach ($taxonomies as $taxonomy) {
+	        // get the terms related to post
+	        switch($taxonomy->name){
+	          case 'product_cat':
+
+	          break;
+	          case 'product_type':
+	          break;
+	          default:
+						$terms = wp_get_object_terms($post_id, $taxonomy->name, array('orderby' => 'term_order', 'order' => 'DESC', 'fields' => 'all'));
+	            //$terms = wp_get_post_terms( $post_id, $taxonomy->name, $args );
+	            if ( !empty( $terms ) ) {
+	                $i = 0;
+	                foreach ( $terms as $term ){
+
+											$out[$taxonomy->name][$term->slug] 		= $term->slug;
+											$out[$taxonomy->name]['parentname'] 	= $taxonomy->label;
+											$out[$taxonomy->name]['name'] 				= $term->name;
+	                    $out[$taxonomy->name]['slug'] 				= $term->name;
+	                    $i ++;
+	                }
+	            }
+	        break;
+
+	      }
+
+	    }
+	    return $out;
 	}
+	/**
+	 *
+	 */
+	public function get_the_terms_sorted( $post_id, $taxonomy ) {
+				$terms = get_the_terms( $post_id, $taxonomy );
+				function cmp_by_custom_order( $a, $b ) {
+					return $a->custom_order - $b->custom_order;
+				}
+				if ( $terms ) usort( $terms, '_wc_get_product_terms_name_num_usort_callback' );
+				return $terms;
+}
+/**
+ *
+ */
 	public  function Deci_Con($q){
 		//check for a space, signifying a whole number with a fraction
 		    if(strstr($q, ' ')){
@@ -411,7 +641,7 @@ class ajaxclass{
 		$e = strrev($d);
 		$a = str_replace("/","",$e);//the pre-final numerator
 		        if($whole==true){//add the whole number to the calculations
-		            $a = $a+($wb*$b);//new numerator is whole number multiplied by denominator plus original numerator    
+		            $a = $a+($wb*$b);//new numerator is whole number multiplied by denominator plus original numerator
 		        }
 		$q = $a/$b;//this is now your decimal
 		return $q;

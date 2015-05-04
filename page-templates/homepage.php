@@ -1,38 +1,49 @@
 <?php
 /*
-Template Name: Full width slider 
+Template Name: Full width slider front page
 */
-get_header(); ?>
+	get_header();
+	$pagemeta = get_post_meta($post->ID);
+
+?>
+
 <?php get_template_part('parts/slider'); ?>
 <?php get_template_part('parts/home-grid'); ?>
+<?php
+if($pagemeta["wpcf-show-home-content-mid-bar-intro"][0] === 'yes'){ ?>
+	<hr/>
+		<div class="row">
+			<div class="small-12 large-12 columns" role="main">
 
-	<div class="row">
-		<div class="small-12 large-12 columns" role="main">
+			<?php do_action('foundationPress_before_content'); ?>
 
-		<?php do_action('foundationPress_before_content'); ?>
+			<?php while (have_posts()) : the_post(); ?>
+				<article <?php post_class() ?> id="post-<?php the_ID(); ?>">
+					<?php get_template_part('parts/header-titles'); ?>
 
-		<?php while (have_posts()) : the_post(); ?>
-			<article <?php post_class() ?> id="post-<?php the_ID(); ?>">
-				<?php get_template_part('parts/header-titles'); ?>
+					<?php do_action('foundationPress_page_before_entry_content'); ?>
+					<div class="entry-content">
+						<?php the_content(); ?>
+					</div>
+					<footer>
+						<?php wp_link_pages(array('before' => '<nav id="page-nav"><p>' . __('Pages:', 'FoundationPress'), 'after' => '</p></nav>' )); ?>
+						<p><?php the_tags(); ?></p>
+					</footer>
+					<?php do_action('foundationPress_page_before_comments'); ?>
+					<?php comments_template(); ?>
+					<?php do_action('foundationPress_page_after_comments'); ?>
+				</article>
 
-				<?php do_action('foundationPress_page_before_entry_content'); ?>
-				<div class="entry-content">
-					<?php the_content(); ?>
-				</div>
-				<footer>
-					<?php wp_link_pages(array('before' => '<nav id="page-nav"><p>' . __('Pages:', 'FoundationPress'), 'after' => '</p></nav>' )); ?>
-					<p><?php the_tags(); ?></p>
-				</footer>
-				<?php do_action('foundationPress_page_before_comments'); ?>
-				<?php comments_template(); ?>
-				<?php do_action('foundationPress_page_after_comments'); ?>
-			</article>
-		<?php endwhile;?>
+			<?php endwhile;?>
 
-		<?php do_action('foundationPress_after_content'); ?>
+			<?php do_action('foundationPress_after_content'); ?>
 
-		</div>
-</div>
-<?php get_template_part('parts/home-products'); ?>
+			</div>
+	</div>
+	<hr/>
+<?php }else{ ?>
+		<hr/>
+<?php } ?>
+<?php get_template_part('parts/home-loop'); ?>
 
 <?php get_footer(); ?>

@@ -17,58 +17,39 @@ $has_row    = false;
 $alt        = 1;
 $attributes = $product->get_attributes();
 
-ob_start();
-?>
-<table class="shop_attributes">
 
-	<?php if ( $product->enable_dimensions_display() ) : ?>
+$i = 0;
+$left  = '<div class="large-6 columns">';
+$right = '<div class="large-6 columns">';
 
-		<?php if ( $product->has_weight() ) : $has_row = true; ?>
-			<tr class="<?php if ( ( $alt = $alt * -1 ) == 1 ) echo 'alt'; ?>">
-				<th><?php _e( 'Weight', 'woocommerce' ) ?></th>
-				<td class="product_weight"><?php echo $product->get_weight() . ' ' . esc_attr( get_option( 'woocommerce_weight_unit' ) ); ?></td>
-			</tr>
-		<?php endif; ?>
+foreach ($attributes as $attribute) {
+	if ( $attribute['is_taxonomy'] ) {
 
-		<?php if ( $product->has_dimensions() ) : $has_row = true; ?>
-			<tr class="<?php if ( ( $alt = $alt * -1 ) == 1 ) echo 'alt'; ?>">
-				<th><?php _e( 'Dimensions', 'woocommerce' ) ?></th>
-				<td class="product_dimensions"><?php echo $product->get_dimensions(); ?></td>
-			</tr>
-		<?php endif; ?>
+		$values = 	wc_get_product_terms( $product->id, $attribute['name'], array( 'fields' => 'names' ) );
+		$att 		=  	apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
 
-	<?php endif; ?>
+	} else {
 
-	<?php foreach ( $attributes as $attribute ) :
-		if ( empty( $attribute['is_visible'] ) || ( $attribute['is_taxonomy'] && ! taxonomy_exists( $attribute['name'] ) ) ) {
-			continue;
-		} else {
-			$has_row = true;
-		}
-		?>
-		<tr class="<?php if ( ( $alt = $alt * -1 ) == 1 ) echo 'alt'; ?>">
-			<th><?php echo wc_attribute_label( $attribute['name'] ); ?></th>
-			<td><?php
-				if ( $attribute['is_taxonomy'] ) {
+		// Convert pipes to commas and display values
+		$values = 	array_map( 'trim', explode( WC_DELIMITER, $attribute['value'] ) );
+		$att		=  	apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
 
-					$values = wc_get_product_terms( $product->id, $attribute['name'], array( 'fields' => 'names' ) );
-					echo apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
+	}
+    if ($i++ % 2 == 0) {
 
-				} else {
-
-					// Convert pipes to commas and display values
-					$values = array_map( 'trim', explode( WC_DELIMITER, $attribute['value'] ) );
-					echo apply_filters( 'woocommerce_attribute', wpautop( wptexturize( implode( ', ', $values ) ) ), $attribute, $values );
-
-				}
-			?></td>
-		</tr>
-	<?php endforeach; ?>
-	
-</table>
-<?php
-if ( $has_row ) {
-	echo ob_get_clean();
-} else {
-	ob_end_clean();
+        $left  .= '<div class="item"><p><span><strong>' . wc_attribute_label( $attribute['name'] ) . ':</strong> </span><span>'. implode( ', ', $values ).'</span></p></div>';
+    } else {
+				$right .= '<div class="item"><p><span><strong>' . wc_attribute_label( $attribute['name'] ) . ':</strong> </span><span>'. implode( ', ', $values ).'</span></p></div>';
+    }
 }
+
+$left  .= '</div>';
+$right .= '</div>';
+
+
+
+?>
+<div class="row">
+	<?php echo $left; ?>
+	<?php echo $right; ?>
+</div>

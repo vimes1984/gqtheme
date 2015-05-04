@@ -20,24 +20,24 @@
 		} else {
 			echo wp_title( ' | ', 'false', 'right' ); bloginfo( 'name' );
 		} ?></title>
-		
+
 		<link rel="stylesheet" href="<?php echo get_stylesheet_directory_uri() ; ?>/css/foundation.css" />
 		<link rel="icon" href="<?php echo get_stylesheet_directory_uri() ; ?>/assets/img/icons/favicon.ico" type="image/x-icon">
 		<link rel="apple-touch-icon-precomposed" sizes="144x144" href="<?php echo get_stylesheet_directory_uri() ; ?>/assets/img/icons/apple-touch-icon-144x144-precomposed.png">
 		<link rel="apple-touch-icon-precomposed" sizes="114x114" href="<?php echo get_stylesheet_directory_uri() ; ?>/assets/img/icons/apple-touch-icon-114x114-precomposed.png">
 		<link rel="apple-touch-icon-precomposed" sizes="72x72" href="<?php echo get_stylesheet_directory_uri() ; ?>/assets/img/icons/apple-touch-icon-72x72-precomposed.png">
 		<link rel="apple-touch-icon-precomposed" href="<?php echo get_stylesheet_directory_uri() ; ?>/assets/img/icons/apple-touch-icon-precomposed.png">
-		
+
 		<?php wp_head(); ?>
 	</head>
 	<body <?php body_class(); ?> ng-app="gqapp">
 	<?php do_action('foundationPress_after_body'); ?>
-	
+
 	<div class="off-canvas-wrap" data-offcanvas>
 	<div class="inner-wrap">
-	
+
 	<?php do_action('foundationPress_layout_start'); ?>
-	
+
 	<nav class="tab-bar show-for-medium-down">
 		<section class="left-small">
 			<a class="left-off-canvas-toggle menu-icon" href="#"><span> &nbsp;Menu</span></a>
@@ -54,9 +54,9 @@
 	<?php get_template_part('parts/top-bar'); ?>
 	<?php get_template_part('parts/post-top-bar'); ?>
 
-	<?php 
+	<?php
 		$pagetemplate =  get_page_template_slug( $post->ID );
-		if( $pagetemplate != 'page-templates/fullwidth-slider.php' && $pagetemplate != "page-templates/homepage.php"){
+		if( $pagetemplate != 'page-templates/fullwidth-slider.php' && $pagetemplate != "page-templates/homepage.php" && !is_woocommerce()){
 			get_template_part('parts/page-banner');
 		}
 	?>

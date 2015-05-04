@@ -4,9 +4,11 @@
     "css/foundation.css",
     "js/foundation.js"
   ],
-  "ignore": [
-  ],
+  "ignore": [],
   "dependencies": {
     "foundation": "zurb/bower-foundation"
+  },
+  "resolutions": {
+    "angular": "1.3.7"
   }
 }

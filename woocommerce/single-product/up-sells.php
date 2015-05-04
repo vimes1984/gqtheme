@@ -37,30 +37,47 @@ if ( $products->have_posts() ) : ?>
 	<div class="upsells products row">
 		<h4><?php _e( 'Up sells', 'woocommerce' ); ?></h4>
 
-			<?php while ( $products->have_posts() ) : $products->the_post(); 
-				$image 				= wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'single-post-thumbnail' );	 	
-			?>
+			<?php while ( $products->have_posts() ) : $products->the_post(); ?>
 				<div class="large-12 columns">
-					<div class="panel" data-equalizer-watch>
+					<div class="" data-equalizer-watch>
 						<h5><?php the_title(); ?></h5>
 							<a href="<?php the_permalink(); ?>"><img src="<?php echo get_image_woo($post->ID); ?>" title="<?php the_title(); ?> image"></a>
-							<p> <?php 
-
-							$string = strip_tags( $post->post_content);
-
-							if (strlen($string) <=100) {
-							  echo $string;
-							} else {
-							  echo substr($string, 0, 100) . '...';
-							}
-
-							?>
 							<?php  wc_get_template( 'loop/price.php' ); ?>
-							<?php woocommerce_template_single_add_to_cart(); ?>
 
-							
+							<?php if ( $product->is_in_stock() ){ ?>
+
+								<?php do_action( 'woocommerce_before_add_to_cart_form' ); ?>
+
+								<form class="cart" method="post" enctype='multipart/form-data' action="<?php echo get_permalink( $product->id ); ?>" ng-cloak>
+								 	<?php do_action( 'woocommerce_before_add_to_cart_button' ); ?>
+
+								 	<?php
+								 		if ( ! $product->is_sold_individually() )
+								 			woocommerce_quantity_input( array(
+								 				'min_value' => apply_filters( 'woocommerce_quantity_input_min', 1, $product ),
+								 				'max_value' => apply_filters( 'woocommerce_quantity_input_max', $product->backorders_allowed() ? '' : $product->get_stock_quantity(), $product )
+								 			) );
+								 	?>
+
+								 	<input type="hidden" name="add-to-cart" value="<?php echo esc_attr( $products->post->ID ); ?>" />
+									<div class="row addtocartwrap">
+										<div class="large-12 columns">
+											<button type="submit" class="single_add_to_cart_button button alt"><?php echo $product->single_add_to_cart_text(); ?></button>
+										</div>
+									</div>
+
+									<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
+								</form>
+
+								<?php do_action( 'woocommerce_after_add_to_cart_form' ); ?>
+
+							<?php }else{ ?>
+								<h2>No in stock</h2>
+							<?php }; ?>
+
 					</div>
 				</div>
+				<hr/>
 			<?php endwhile; // end of the loop. ?>
 
 	</div>

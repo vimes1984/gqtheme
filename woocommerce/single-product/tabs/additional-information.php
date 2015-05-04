@@ -1,7 +1,7 @@
 <?php
 /**
  * Additional Information tab
- * 
+ *
  * @author        WooThemes
  * @package       WooCommerce/Templates
  * @version       2.0.0
@@ -18,7 +18,7 @@ $heading = apply_filters( 'woocommerce_product_additional_information_heading', 
 ?>
 
 <?php if ( $heading ): ?>
-	<h2><?php echo $heading; ?></h2>
+	<h2>Specifications</h2>
 <?php endif; ?>
 
 <?php $product->list_attributes(); ?>

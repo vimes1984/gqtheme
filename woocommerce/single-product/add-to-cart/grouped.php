@@ -72,7 +72,15 @@ do_action( 'woocommerce_before_add_to_cart_form' ); ?>
 
 		<?php do_action( 'woocommerce_before_add_to_cart_button' ); ?>
 
-		<button type="submit" class="single_add_to_cart_button button alt"><?php echo $product->single_add_to_cart_text(); ?></button>
+		<div class="row addtocartwrap">
+			<div class="large-6 columns ">
+				<?php echo do_shortcode('[yith_wcwl_add_to_wishlist]'); ?>
+			</div>
+			<div class="large-6 columns">
+				<button type="submit" class="single_add_to_cart_button button alt"><?php echo $product->single_add_to_cart_text(); ?></button>
+			</div>
+		</div>
+
 
 		<?php do_action( 'woocommerce_after_add_to_cart_button' ); ?>
 

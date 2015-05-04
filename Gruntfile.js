@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         // If you can't get source maps to work, run the following command in your terminal:
         // $ sass scss/foundation.scss:css/foundation.css --sourcemap
         // (see this link for details: http://thesassway.com/intermediate/using-source-maps-with-sass )
-        sourceMap: true
+        sourceMap: false
       },
 
       dist: {
@@ -37,34 +37,48 @@ module.exports = function(grunt) {
         },
         dist: {
           src: [
-
+          'js/vendor/modernizer.js',
+          'js/vendor/jquery.js',
           // Foundation core
           'bower_components/foundation/js/foundation/foundation.js',
-          
+
           // Pick the componenets you need in your project
-          'bower_components/foundation/js/foundation/foundation.abide.js',
-          'bower_components/foundation/js/foundation/foundation.accordion.js',
-          'bower_components/foundation/js/foundation/foundation.alert.js',
-          'bower_components/foundation/js/foundation/foundation.clearing.js',
-          'bower_components/foundation/js/foundation/foundation.dropdown.js',
+          //'bower_components/foundation/js/foundation/foundation.abide.js',
+          //'bower_components/foundation/js/foundation/foundation.accordion.js',
+          //'bower_components/foundation/js/foundation/foundation.alert.js',
+          //'bower_components/foundation/js/foundation/foundation.clearing.js',
+          //'bower_components/foundation/js/foundation/foundation.dropdown.js',
           'bower_components/foundation/js/foundation/foundation.equalizer.js',
-          'bower_components/foundation/js/foundation/foundation.interchange.js',
-          'bower_components/foundation/js/foundation/foundation.joyride.js',
-          'bower_components/foundation/js/foundation/foundation.magellan.js',
+          //'bower_components/foundation/js/foundation/foundation.interchange.js',
+          //'bower_components/foundation/js/foundation/foundation.joyride.js',
+          //'bower_components/foundation/js/foundation/foundation.magellan.js',
           'bower_components/foundation/js/foundation/foundation.offcanvas.js',
           'bower_components/foundation/js/foundation/foundation.orbit.js',
-          'bower_components/foundation/js/foundation/foundation.reveal.js',
-          'bower_components/foundation/js/foundation/foundation.slider.js',
+          //'bower_components/foundation/js/foundation/foundation.reveal.js',
+          //'bower_components/foundation/js/foundation/foundation.slider.js',
           'bower_components/foundation/js/foundation/foundation.tab.js',
-          'bower_components/foundation/js/foundation/foundation.tooltip.js',
+          //'bower_components/foundation/js/foundation/foundation.tooltip.js',
           'bower_components/foundation/js/foundation/foundation.topbar.js',
-          
+          'js/vendor/angular.min.js',
+          'js/vendor/masonry.pkgd.min.js',
+          'js/vendor/angular-isotope.min.js',
+          'js/vendor/spin.js',
+          'js/vendor/angular-spinner.min.js',
+          'js/vendor/angular.rangeSlider.js',
+          'js/vendor/img-src-ondemand.js',
+          //woo stuff
+          'js/vendor/woo/*.js',
+
+
+          'js/vendor/jquery.selectBox.min.js',
+          'js/vendor/jquery.yith-wcwl.js',
           // Using all of your custom js files
-          'js/custom/*.js'
-          
+          //'js/custom/*.js'
+
           ],
           // Concat all the files above into one single file
           dest: 'js/foundation.js',
+
         },
       },
 
