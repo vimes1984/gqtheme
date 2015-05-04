@@ -35,5 +35,7 @@ require_once('library/custom-header.php');
 require_once('library/custom-functions.php');
 //add shop ednpoints
 require_once('library/ajax_calls_shop.php');
+//Mega menu
+require_once('library/mega_menu.php');
 
 ajaxclass::get_instance();

@@ -37,7 +37,14 @@ global $product;
 			<h1 class="price"><strike class="small">&pound;{{price}}</strike> &pound;{{singledata.product_meta._sale_price}}</h1>
 		</div>
 	</div>
-
+	<div ng-if="singledata.price.type == 'default'">
+		<div ng-if="singledata.product_meta._sale_price === ''" >
+			<h1 class="price">&pound;{{price}}</h1>
+		</div>
+		<div ng-if="singledata.product_meta._sale_price != ''" >
+			<h1 class="price"><strike class="small">&pound;{{price}}</strike> &pound;{{singledata.product_meta._sale_price}}</h1>
+		</div>
+	</div>
 	<meta itemprop="price" content="<?php echo $product->get_price(); ?>" />
 	<meta itemprop="priceCurrency" content="<?php echo get_woocommerce_currency(); ?>" />
 	<link itemprop="availability" href="http://schema.org/<?php echo $product->is_in_stock() ? 'InStock' : 'OutOfStock'; ?>" />

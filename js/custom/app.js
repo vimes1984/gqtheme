@@ -1,3 +1,5 @@
+"use strict";
+/* jslint camelcase: false */
 
  (function ($) {
     // here goes your custom code
@@ -96,26 +98,28 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
         $scope.userMaxRing     = $scope.maxRing;
         $scope.userMinLength   = $scope.minLength;
         $scope.userMaxLength   = $scope.maxLength;
-        $scope.filters      = '';
-        $scope.filtercat    = ' ';
-
+        $scope.filters         = '';
+        $scope.filtercat       = ' ';
+        $scope.category        = APPINFO.catslug;
 
         usSpinnerService.spin('spinner-1');
 
         $scope.startSpin = function(){
             usSpinnerService.spin('spinner-1');
-        }
+        };
+
         $scope.stopSpin = function(){
             usSpinnerService.stop('spinner-1');
-        }
+        };
+
         $scope.removeallother = function removeallother(filtercat){
 
-            angular.forEach(angular.element(".filterterms"), function(value, key){
+            angular.forEach(angular.element('.filterterms'), function(value, key){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
 
-            angular.forEach(angular.element(".filtercats"), function(value, key){
+            angular.forEach(angular.element('.filtercats'), function(value, key){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
@@ -145,12 +149,12 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
             $scope.userMinLength   = $scope.minLength;
             $scope.userMaxLength   = $scope.maxLength;
             console.log($scope);
-            angular.forEach(angular.element(".filterterms"), function(value, key){
+            angular.forEach(angular.element('.filterterms'), function(value, key){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
 
-            angular.forEach(angular.element(".filtercats"), function(value, key){
+            angular.forEach(angular.element('.filtercats'), function(value, key){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
@@ -166,6 +170,7 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
           angular.forEach()
 
         };
+
         $scope.to_trusted = function(html_code) {
             return $sce.trustAsHtml(html_code);
         };
@@ -242,7 +247,6 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
         getshop.getshop($scope)
             .success(function(data, status, headers, config){
                 $scope.shoploop = data;
-                //console.log(data);
                 usSpinnerService.stop('spinner-1');
                 if($scope.filters == ''){
                   $timeout($scope.applyfilter, 50);
@@ -264,6 +268,45 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
 
 		});
+});
+gqApp.controller('menucontroll', function ($scope, $sce, usSpinnerService ) {
+
+  usSpinnerService.spin('spinmenu');
+
+  $scope.$on('ngRepeatFinished', function(ngRepeatFinishedEvent) {
+    //you also get the actual event object
+    //do stuff, execute functions -- whatever...
+    $(document).foundation('equalizer','reflow');
+
+  });
+  $scope.to_trusted = function(html_code) {
+      return $sce.trustAsHtml(html_code);
+  };
+
+});
+gqApp.factory('getmegamenuhtml', function($http){
+    return {
+      getmegamenuhtml: function($scope) {
+            return  $http({
+                        method: 'POST',
+                        url: '/wp-admin/admin-ajax.php',
+                        data: $scope.postID,
+                        params: { 'action': 'get_mega_menu_html', }
+                    });
+        }
+    };
+});
+gqApp.factory('getmegamenu', function($http){
+    return {
+      getmegamenu: function($scope) {
+            return  $http({
+                        method: 'POST',
+                        url: '/wp-admin/admin-ajax.php',
+                        data: $scope.megacat,
+                        params: { 'action': 'get_mega_menu', }
+                    });
+        }
+    };
 });
 gqApp.factory('getshop', function($http){
     return {
@@ -403,9 +446,9 @@ gqApp.directive("markable", function() {
         link: function(scope, elem, attrs) {
             elem.on("click", function() {
                 if(elem.hasClass('success')){
-                    elem.removeClass("success");
+                    elem.removeClass('success');
                 }else{
-                    elem.addClass("success");
+                    elem.addClass('success');
                 }
             });
         }
@@ -438,6 +481,147 @@ gqApp.directive('filterterms',['$location', function(location){
         }
     };
 }]);
+//watch menu ng-repeat so we can resize:D
+gqApp.directive('onFinishRender', function ($timeout) {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attr) {
+            if (scope.$last === true) {
+                $timeout(function () {
+                    scope.$emit('ngRepeatFinished');
+                });
+            }
+        }
+    }
+});
+//on page load get the default megamenu item
+gqApp.directive('activeone', function(getmegamenu, usSpinnerService, getmegamenuhtml){
+      // Runs during compile
+      return {
+          restrict: 'C', // E = Element, A = Attribute, C = Class, M = Comment
+          link: function ($scope, iElm, iAttrs, controller) {
+            if($(iElm[0]).hasClass('notab')){
+
+            }else if($(iElm[0]).hasClass('customhtml')){
+              // Prevent default dragging of selected content
+              event.preventDefault();
+              var getID = $(iElm[0]).attr('id');
+
+              $scope.postID = getID;
+              //Shop loop
+              getmegamenuhtml.getmegamenuhtml($scope)
+                  .success(function(data, status, headers, config){
+
+                      $scope.hidehtml = false;
+                      $scope.hideloop = true;
+                      $scope.datahtml = data;
+                      usSpinnerService.stop('spinmenu');
+                      console.log(data);
+
+              })
+              .error(function(data, status, headers, config) {
+                $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
+
+              });
+
+            }else{
+
+              // Prevent default dragging of selected content
+              event.preventDefault();
+
+
+              var gethref = $(iElm[0]).find('a').attr('href');
+
+
+
+              $scope.megacat = gethref;
+              //Shop loop
+              getmegamenu.getmegamenu($scope)
+                  .success(function(data, status, headers, config){
+                      $scope.catloopmegamenu = data;
+                      usSpinnerService.stop('spinmenu');
+                      console.log(data);
+
+              })
+              .error(function(data, status, headers, config) {
+                $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
+
+              });
+
+            }
+
+          }
+    };
+});
+//watch click on megamenu item
+gqApp.directive('megamenutab', function(getmegamenu, usSpinnerService, getmegamenuhtml){
+    // Runs during compile
+    return {
+        restrict: 'C', // E = Element, A = Attribute, C = Class, M = Comment
+        link: function($scope, iElm, iAttrs, controller) {
+
+            var getlink = $(iElm[0]).find('a');
+
+
+            getlink.on('click', function(event) {
+              //Default on clickfirst we
+              $('.megamenutab').each(function(){ $(this).removeClass('activeone'); });
+              iElm.addClass('activeone');
+              usSpinnerService.spin('spinmenu');
+
+              if($(iElm[0]).hasClass('notab')){
+
+              }else if($(iElm[0]).hasClass('customhtml')){
+                // Prevent default dragging of selected content
+                event.preventDefault();
+                var getID = $(iElm[0]).attr('id');
+
+                $scope.postID = getID;
+                //Shop loop
+                getmegamenuhtml.getmegamenuhtml($scope)
+                    .success(function(data, status, headers, config){
+
+                        $scope.hidehtml = false;
+                        $scope.hideloop = true;
+                        $scope.datahtml = data;
+                        usSpinnerService.stop('spinmenu');
+                        console.log(data);
+
+                })
+                .error(function(data, status, headers, config) {
+                  $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
+
+                });
+
+              }else{
+
+                // Prevent default dragging of selected content
+                event.preventDefault();
+
+
+                var gethref = $(iElm[0]).find('a').attr('href');
+
+                $scope.megacat = gethref;
+                //Shop loop
+                getmegamenu.getmegamenu($scope)
+                    .success(function(data, status, headers, config){
+
+                        $scope.hidehtml = true;
+                        $scope.hideloop = false;
+                        $scope.catloopmegamenu = data;
+                        usSpinnerService.stop('spinmenu');
+
+                })
+                .error(function(data, status, headers, config) {
+                  $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
+
+                });
+              }
+            });
+        }
+    };
+});
+
 /**Config*/
 gqApp.config(['usSpinnerConfigProvider', function (usSpinnerConfigProvider) {
     usSpinnerConfigProvider.setDefaults({

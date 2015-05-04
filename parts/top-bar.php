@@ -1,11 +1,11 @@
-<?php 
+<?php
 	global $woocommerce;
 	$cart_url = $woocommerce->cart->get_cart_url();
 	$myaccount_page_id = get_option( 'woocommerce_myaccount_page_id' );
 	$checkout_url = $woocommerce->cart->get_checkout_url();
 ?>
 
-<div class="fixed contain-to-grid  hide-for-medium-down" id="fixedtopbar">
+<div class="fixed contain-to-grid  hide-for-medium-down" id="fixedtopbar" ng-controller="menucontroll">
   	<nav class="top-bar" data-topbar role="navigation">
     	<section class="top-bar-section large-6 columns">
 	    	<?php foundationPress_top_bar_l(); ?>
@@ -13,11 +13,11 @@
 	    <section class="large-6 columns">
 	        	<div class="row">
 					<div class="large-3 columns">
-						<?php	
-							if ( $myaccount_page_id ) { 
+						<?php
+							if ( $myaccount_page_id ) {
 								$myaccount_page_url = get_permalink( $myaccount_page_id );
 						?>
-							<a href="<?php echo $myaccount_page_url;  ?>"><i class="fi-home large"></i> <?php _e('Account', 'theme settings'); ?></a>								
+							<a href="<?php echo $myaccount_page_url;  ?>"><i class="fi-home large"></i> <?php _e('Account', 'theme settings'); ?></a>
 						<?php }?>
 					</div>
 					<div class="large-6 columns">
@@ -30,7 +30,7 @@
 	    </section>
 	</nav>
 </div>
-<?php 
+<?php
 /*
 <div class="top-bar-container hide-for-medium-down fixed" role="navigation">
 	<nav class="top-bar row" data-topbar="">

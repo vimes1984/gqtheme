@@ -72,6 +72,10 @@ class ajaxclass{
 		add_action( 'wp_ajax_shop_page_loop', array($this,  'shop_page_loop') );
 		add_action('wp_ajax_nopriv_single_page', array($this, 'single_page') );
 		add_action( 'wp_ajax_single_page', array($this,  'single_page') );
+		add_action('wp_ajax_nopriv_get_mega_menu', array($this, 'get_mega_menu') );
+		add_action( 'wp_ajax_get_mega_menu', array($this,  'get_mega_menu') );
+		add_action('wp_ajax_nopriv_get_mega_menu_html', array($this, 'get_mega_menu_html') );
+		add_action( 'wp_ajax_get_mega_menu_html', array($this,  'get_mega_menu_html') );
 	}
 
 	/**
@@ -89,6 +93,64 @@ class ajaxclass{
 		}
 
 		return self::$instance;
+	}
+	/****
+	 	*
+		*Cart Page
+	 	***/
+
+
+
+
+	public function get_mega_menu_html(){
+		// Include the client library
+		$request_body 	= file_get_contents( 'php://input' );
+		$exploded 			= explode("-", $request_body );
+		$postid					= end($exploded);
+		$itemmeta 			= get_post_meta($postid,'_menu_item_customhtml', true);
+
+			echo $itemmeta;
+		die(); // this is required to return a proper result
+
+	}
+	public function get_mega_menu() {
+		// Include the client library
+		$request_body 	= file_get_contents( 'php://input' );
+		$exploded 			= explode("/", $request_body );
+		$catslug				= end($exploded);
+		$parentcat 			= get_term_by('slug', $catslug, 'product_cat');
+		$returnarray 		= array();
+		$args_cats 			= array(
+			'parent'			 => $parentcat->term_id,
+			'child_of' 		 => $parentcat->term_id,
+			'taxonomy' 		 => 'product_cat',
+			'hide_empty' 	 => 0,
+			'hierarchical' => true,
+			'depth'  			 => 1,
+			);
+
+			$returnarray[0]['parent_name'] = $parentcat->name;
+			$returnarray[0]['  b '] = $request_body;
+
+		$categories = get_categories( $args_cats );
+		$i = 1;
+		foreach($categories as $cat){
+
+			//var_dump($cat);
+
+			$returnarray[$i]['parent_name'] = 'NULL';
+			$returnarray[$i]['cat_name'] = $cat->cat_name;
+			$returnarray[$i]['cat_slug'] = $cat->slug;
+			$returnarray[$i]['cat_link'] = get_term_link($cat);
+
+
+
+			$i++;
+		}
+		$catreturn = json_encode( $returnarray );
+
+			echo $catreturn;
+		die(); // this is required to return a proper result
 	}
 	/****
 	 	*
@@ -169,8 +231,15 @@ class ajaxclass{
 
 
 			if($extended->product_type === 'variable'){
+
 				$available_variations = $extended->get_available_variations();
+
+						//var_dump($available_variations );
+
 				foreach($available_variations as $key => $value){
+
+
+						$available_variations[$key]['value']								= $value;
 						$available_variations[$key]['stock_text']	= $this->getproductavail($value['variation_id'], 'variation', round($getprodmet['_stock'][0], 0), $getprodmet['_backorders'][0] );
 
 				}
@@ -316,22 +385,23 @@ class ajaxclass{
 	 */
 	public function shop_page_loop($cat = '') {
 		global $product, $wpdb;
+		/*
+			not in use unreliable.
+			$reffer			= $_SERVER['HTTP_REFERER'];
+			$catpreg  	= preg_match('#/c/(.*)/#', $reffer, $matches);
+			$exploded 		= explode("/", $reffer );
+			$catslug		= end($exploded);
+		*/
+				$request_body 	= file_get_contents( 'php://input' );
 
+				$args 					= array( 'post_type' => 'product', 'product_cat' => $request_body, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
 
-		$reffer			= $_SERVER['HTTP_REFERER'];
-		$catpreg  	= preg_match('#/c/(.*)/#', $reffer, $matches);
-		$exploded 		= explode("/", $reffer );
-		$catslug		= end($exploded);
-
-		//not in use but may need to be...
-		$request_body 	= file_get_contents( 'php://input' );
-
-				$args 					= array( 'post_type' => 'product', 'product_cat' => $matches[1], 'posts_per_page' => '-1', 'post_status'=> 'publish' );
+				//not in use but may need to be...
 				/*
 			if($cat != ''){
 				$args 					= array( 'post_type' => 'product', 'product_cat' => $cat, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
 			}else{
-				$args 					= array( 'post_type' => 'product', 'product_cat' => $request_body, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
+				$args 					= array( 'post_type' => 'product', 'product_cat' => $matches[1], 'posts_per_page' => '-1', 'post_status'=> 'publish' );
 
 			}
 			*/
@@ -432,6 +502,7 @@ class ajaxclass{
 
 
 		}
+		ob_start('ob_gzhandler');
 
 		$backtoangular = json_encode( $prodsandmeta );
 
