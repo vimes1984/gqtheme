@@ -601,16 +601,16 @@ function woocommerce_sale_products( $atts = array() ){
  }
 /**
  * Latest youtube video for glynn
+ *See https://developers.google.com/apis-explorer/#p/youtube/v3/ for more info and specificly https://developers.google.com/apis-explorer/#p/youtube/v3/youtube.playlistItems.list?part=snippet%252CcontentDetails&playlistId=UUA-uaEiSf8aYlXhkmHdQh-g&_h=6&
  */
  function youtubevidid(){
 
-      error_reporting(E_ALL);
-      $feedURL  = 'http://gdata.youtube.com/feeds/api/users/gqtobaccos/uploads?max-results=1';
-      $sxml     = simplexml_load_file($feedURL);
-      $getvars  = get_object_vars($sxml->entry->link);
-      $parsed   = parse_url( str_replace ( 'v=' ,  '', str_replace ( '&feature=youtube_gdata' ,  '', $getvars["@attributes"]['href'] ) ) );
+      $feedURL        = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&playlistId=UUA-uaEiSf8aYlXhkmHdQh-g&key=AIzaSyBgoLMYh7o4Aa-GamiCZfxWFZ0hoAmedpk';
+      $jsonreturn     = file_get_contents($feedURL);
+      $phparray       = json_decode($jsonreturn);
+      $parsed         = $phparray->items[0]->contentDetails->videoId;
 
-      return $parsed["query"];
+      return $parsed;
 
  }
 /**
@@ -625,3 +625,53 @@ function woocommerce_sale_products( $atts = array() ){
       }
  }
  add_action( 'admin_enqueue_scripts', 'my_deregister_heartbeat' );
+
+
+//Currency stuff
+ function get_currency_value(){
+     //get the default values
+     $defaultcurrency = get_option('default_currency');
+
+     $currency = isset($_COOKIE["currency_converter"]) ? $_COOKIE["currency_converter"] : $defaultcurrency;
+
+     return $currency;
+
+ }
+
+function get_currency(){
+    $currencysymbol = get_currency_value();
+
+		if(!isset($_COOKIE["exchange_rate"])){
+
+        require_once('jsonrates/Client.php');
+			   $jsonrates          =   new \Jsonrates\Client('jr-f7f5e29e19eb1b932ccac62add30c394');
+			   $defaultcurrency    =   get_option('default_currency');
+         $exchangerate       =    $jsonrates->from($defaultcurrency)->to($currencysymbol)->get();
+         $encoded            =    base64_encode( json_encode($exchangerate) );
+         setcookie( 'exchange_rate', $encoded, time() + 3600, COOKIEPATH, COOKIE_DOMAIN );
+
+
+
+    }elseif(isset($_GET['currency_converter'])){
+        require_once('jsonrates/Client.php');
+         $jsonrates          =   new \Jsonrates\Client('jr-ecbc4913eac6d0db04bfc29f4ecb2704');
+         $defaultcurrency    =   get_option('default_currency');
+         $exchangerate       =    $jsonrates->from($defaultcurrency)->to($_GET['currency_converter'])->get();
+         $encoded            =    base64_encode( json_encode($exchangerate) );
+         setcookie( 'exchange_rate', $encoded , time() + 3600, COOKIEPATH, COOKIE_DOMAIN );
+
+    }
+    if(!isset($_COOKIE["vat_value"])){
+
+			   $vat_value    =   get_option('default_vatrate');
+         setcookie( 'vat_value', $vat_value, time() + 3600, COOKIEPATH, COOKIE_DOMAIN );
+
+
+
+    }elseif(isset($_GET['vat_value'])){
+
+         setcookie( 'vat_value', $_GET['vat_value'] , time() + 3600, COOKIEPATH, COOKIE_DOMAIN );
+
+    }
+}
+add_action('init', 'get_currency');

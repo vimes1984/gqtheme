@@ -124,7 +124,7 @@ $include-html-global-classes: $include-html-classes;
  $jet         : #222222;
  $black       : #000000;
  $red         : #D03D3D;
-
+ $bluegrey    : #436968;
 // We use these as default colors throughout
   $primary-color: #008CBA;
  $secondary-color: #e7e7e7;
@@ -134,7 +134,7 @@ $include-html-global-classes: $include-html-classes;
  $info-color: #a0d3e8;
 
 // We use these to control various global styles
- $body-bg: $white;
+   $body-bg: $white;
 // $body-font-color: $jet;
    $body-font-family: $font-family-Lato;
 // $body-font-weight: $font-weight-normal;
@@ -452,13 +452,13 @@ $header-font-color: $jet;
 // $button-font-align: center;
 
 // We use these to control various hover effects.
-// $button-function-factor: -20%;
+   $button-function-factor: -20%;
 
 // We use these to control button border and hover styles.
 // $button-border-width: 0px;
 // $button-border-style: solid;
-// $button-bg-color: $primary-color;
-// $button-bg-hover: scale-color($button-bg-color, $lightness: $button-function-factor);
+   $button-bg-color: $bluegrey;
+   $button-bg-hover: scale-color($button-bg-color, $lightness: $button-function-factor);
 // $button-border-color: $button-bg-hover;
 // $secondary-button-bg-hover: scale-color($secondary-color, $lightness: $button-function-factor);
 // $secondary-button-border-color: $secondary-button-bg-hover;
@@ -1509,6 +1509,9 @@ $header-font-color: $jet;
 }
 // 38. custom shit
 // - - - - - - - - - - - - - - - - - - - - - - - - -
+.large-8.columns.contentwrap{
+  padding-top: rem-calc(30px)
+}
 .cat_links{
 	white-space: pre;
 	overflow: hidden;
@@ -1645,9 +1648,16 @@ table.shop_table.cart {
   margin: 0;
   vertical-align: top;
 }
+.socialwrap ul li:last-child{
+  padding-right: 0;
+}
+.socialwrap ul li:first-child{
+  padding-left: 0;
+}
 .socialwrap ul li{
   display: inline-block;
   line-height: rem-calc(25);
+  padding: 0 rem-calc(2);
 }
 .socialwrap a:hover{
   color: #5EBEBC;
@@ -1657,7 +1667,7 @@ table.shop_table.cart {
   display: block;
   font-size: rem-calc(39);
   height: rem-calc(40);
-  color: #436968;
+  color:$bluegrey;
   -webkit-transition: all 0.8s;
     -moz-transition: all 0.8s;
     -o-transition: all 0.8s;
@@ -1668,7 +1678,7 @@ table.shop_table.cart {
 }
 .menuwrap{}
 .menuwrap ul{
-  color: #436968;
+  color:$bluegrey;
   margin: 0;
   }
 .menuwrap ul li{
@@ -1676,7 +1686,7 @@ table.shop_table.cart {
   vertical-align: bottom;
 }
 .menuwrap ul li a{
-  color: #436968;
+  color:$bluegrey;
   font-size: rem-calc(25);
   vertical-align: bottom;
   display: block;
@@ -2425,7 +2435,7 @@ div.product .woocommerce-price-and-add .single_add_to_wishlist.button {
 }
 
 .yith-wcwl-add-to-wishlist {
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 .yith-wcwl-add-button > a i,
@@ -2454,7 +2464,7 @@ div.product .woocommerce-price-and-add .single_add_to_wishlist.button {
     margin: 0px;
     box-shadow: none;
     text-shadow: none;
-    border-radius: 3px;
+    border-radius: 0;
 }
 
 /* Wishlist title */
@@ -3277,10 +3287,11 @@ div.product .woocommerce-price-and-add .single_add_to_wishlist.button {
 .top-bar .tab-flyout{
   display: none;
   position: absolute;
-  width: 1000%;
+  width: 130%;
   background-color: $oil;
   z-index: 999;
   color: #fff;
+  left: 0;
 }
 .top-bar-section .sub-menu-mega{
   display: block;

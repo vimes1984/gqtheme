@@ -31,11 +31,20 @@ require_once('library/theme-support.php');
 
 // Add Header image
 require_once('library/custom-header.php');
+
 //custom functions
 require_once('library/custom-functions.php');
+
 //add shop ednpoints
 require_once('library/ajax_calls_shop.php');
+
+//Register all widgets here
+require_once('library/class-register-widgets.php');
+  //Requier widget classes one per diget type please
+  require_once('library/currency_widget.php');
+
 //Mega menu
 require_once('library/mega_menu.php');
 
 ajaxclass::get_instance();
+RegisterWidgets::get_instance();

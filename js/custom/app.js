@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 /* jslint camelcase: false */
-
+/*global APPINFO, angular */
  (function ($) {
     // here goes your custom code
 	//$(".owl-carousel").owlCarousel();
@@ -14,7 +14,7 @@
 }(jQuery));
 
 var gqApp =  angular.module('gqapp', ['iso.directives', 'angularSpinner', 'ui-rangeSlider', 'img-src-ondemand']);
-gqApp.controller('singleprodpagecontroller', function ($scope, $sce, getsingle ) {
+gqApp.controller('singleprodpagecontroller',['$scope', '$sce', 'getsingle',  function ($scope, $sce, getsingle ) {
   //default values
   $scope.currentvariation = {
     var: '',
@@ -31,12 +31,13 @@ gqApp.controller('singleprodpagecontroller', function ($scope, $sce, getsingle )
         tax: '',
 
       };
+      $scope.price = $scope.singledata.price.price;
     };
     $scope.changevar = function(attname){
 
         $scope.currentvariation.tax = attname;
 
-        angular.forEach($scope.singledata.available_variations, function(value, key){
+        angular.forEach($scope.singledata.available_variations, function(value){
 
           if(value.attributes[attname] === $scope.currentvariation.vartype){
             $scope.currentvariation.var = value;
@@ -60,14 +61,14 @@ gqApp.controller('singleprodpagecontroller', function ($scope, $sce, getsingle )
         });
 
 
-    }
+    };
     $scope.to_trusted = function(html_code) {
         return $sce.trustAsHtml(html_code);
     };
-    $scope.$watch("postid", function(){
+    $scope.$watch('postid', function(){
           //Shop loop
           getsingle.getsingle($scope)
-          .success(function(data, status, headers, config){
+          .success(function(data){
               console.log(data);
               $scope.singledata = data;
               $scope.price = data.price.price;
@@ -80,14 +81,14 @@ gqApp.controller('singleprodpagecontroller', function ($scope, $sce, getsingle )
 
               }
       })
-      .error(function(data, status, headers, config) {
+      .error(function() {
         $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
 
       });
   });
 
-});
-gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinnerService, $timeout, $location ) {
+}]);
+gqApp.controller('shoppagecontroller',['$scope', 'getshop', '$sce', 'usSpinnerService', '$timeout', '$location', function ($scope, getshop, $sce, usSpinnerService, $timeout, $location ) {
         // set available range efault this get's overwrote the moment the loop is returned
         $scope.minRing         = 0;
         $scope.maxRing         = 1999;
@@ -114,12 +115,12 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
         $scope.removeallother = function removeallother(filtercat){
 
-            angular.forEach(angular.element('.filterterms'), function(value, key){
+            angular.forEach(angular.element('.filterterms'), function(value){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
 
-            angular.forEach(angular.element('.filtercats'), function(value, key){
+            angular.forEach(angular.element('.filtercats'), function(value){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
@@ -149,12 +150,12 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
             $scope.userMinLength   = $scope.minLength;
             $scope.userMaxLength   = $scope.maxLength;
             console.log($scope);
-            angular.forEach(angular.element('.filterterms'), function(value, key){
+            angular.forEach(angular.element('.filterterms'), function(value){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
 
-            angular.forEach(angular.element('.filtercats'), function(value, key){
+            angular.forEach(angular.element('.filtercats'), function(value){
                  var a = angular.element(value);
                  a.removeClass('success');
             });
@@ -167,7 +168,7 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
         };
         $scope.urlhashedfilter = function(){
           $scope.$emit('iso-option', {filter: $scope.filters});
-          angular.forEach()
+          angular.forEach();
 
         };
 
@@ -177,11 +178,11 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
         $scope.$watch('location.url()', function(){
 
-            if($location.url() != ''){
+            if($location.url() !== ''){
               var geturl       = $location.url().replace('/', '');
               var parseurl     = geturl.replace(/&/g, '.');
               var split        = parseurl.split('.');
-              var join         = ' ' + split.join(', .')
+              var join         = ' ' + split.join(', .');
               var filters      = join.replace(' , ', '');
               $scope.filters   = filters;
             }else{
@@ -204,28 +205,28 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
 
             $scope.checkforstringstart = $scope.filters.indexOf(filterterm);
-            if($scope.checkforstringstart != -1){
+            if($scope.checkforstringstart !== -1){
 
-                var checkforstringstart     = $scope.filters.indexOf(", ."+filterterm);
-                var checkforstringstarttwo  = $scope.filters.indexOf(" , ."+filterterm);
-                var checkforstringstartthr  = $scope.filters.indexOf("."+filterterm+",");
+                var checkforstringstart     = $scope.filters.indexOf(', .'+filterterm);
+                var checkforstringstarttwo  = $scope.filters.indexOf(' , .'+filterterm);
+                var checkforstringstartthr  = $scope.filters.indexOf('.'+filterterm+',');
 
 
-                if(checkforstringstart != -1){
-                  $scope.filters = $scope.filters.replace(", ."+filterterm, "");
-                }else if(checkforstringstarttwo != -1){
-                  $scope.filters = $scope.filters.replace(" , ."+filterterm, "");
-                }else if(checkforstringstartthr != -1){
-                  $scope.filters = $scope.filters.replace(" ."+filterterm + ", ", "");
+                if(checkforstringstart !== -1){
+                  $scope.filters = $scope.filters.replace(', .'+filterterm, '');
+                }else if(checkforstringstarttwo !== -1){
+                  $scope.filters = $scope.filters.replace(' , .'+filterterm, '');
+                }else if(checkforstringstartthr !== -1){
+                  $scope.filters = $scope.filters.replace(' .'+filterterm + ', ', '');
                 }else{
-                  $scope.filters = $scope.filters.replace("."+filterterm, "");
+                  $scope.filters = $scope.filters.replace('.'+filterterm, '');
 
                 }
 
 
 
 
-                if($scope.filters.length == 0){
+                if($scope.filters.length === 0){
                     $scope.$emit('iso-option', {filter:  '*'});
                 }else{
                     $scope.$emit('iso-option', {filter:  $scope.filters});
@@ -245,10 +246,11 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
 
             //Shop loop
         getshop.getshop($scope)
-            .success(function(data, status, headers, config){
+            .success(function(data){
                 $scope.shoploop = data;
+                console.log(data);
                 usSpinnerService.stop('spinner-1');
-                if($scope.filters == ''){
+                if($scope.filters === ''){
                   $timeout($scope.applyfilter, 50);
 
                 }else{
@@ -258,22 +260,16 @@ gqApp.controller('shoppagecontroller', function ($scope, getshop, $sce, usSpinne
                 }
 
         })
-        .error(function(data, status, headers, config) {
+        .error(function() {
           $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
 
     });
-		//watch category input
-	    $scope.$watch("category", function(){
-
-
-
-		});
-});
-gqApp.controller('menucontroll', function ($scope, $sce, usSpinnerService ) {
+}]);
+gqApp.controller('menucontroll', ['$scope', '$sce', 'usSpinnerService', function ($scope, $sce, usSpinnerService ) {
 
   usSpinnerService.spin('spinmenu');
 
-  $scope.$on('ngRepeatFinished', function(ngRepeatFinishedEvent) {
+  $scope.$on('ngRepeatFinished', function() {
     //you also get the actual event object
     //do stuff, execute functions -- whatever...
     $(document).foundation('equalizer','reflow');
@@ -283,8 +279,8 @@ gqApp.controller('menucontroll', function ($scope, $sce, usSpinnerService ) {
       return $sce.trustAsHtml(html_code);
   };
 
-});
-gqApp.factory('getmegamenuhtml', function($http){
+}]);
+gqApp.factory('getmegamenuhtml', ['$http', function($http){
     return {
       getmegamenuhtml: function($scope) {
             return  $http({
@@ -295,8 +291,8 @@ gqApp.factory('getmegamenuhtml', function($http){
                     });
         }
     };
-});
-gqApp.factory('getmegamenu', function($http){
+}]);
+gqApp.factory('getmegamenu', ['$http', function($http){
     return {
       getmegamenu: function($scope) {
             return  $http({
@@ -307,8 +303,8 @@ gqApp.factory('getmegamenu', function($http){
                     });
         }
     };
-});
-gqApp.factory('getshop', function($http){
+}]);
+gqApp.factory('getshop', ['$http', function($http){
     return {
         getshop: function($scope) {
             return  $http({
@@ -319,8 +315,8 @@ gqApp.factory('getshop', function($http){
                     });
         }
     };
-});
-gqApp.factory('getsingle', function($http){
+}]);
+gqApp.factory('getsingle',['$http',  function($http){
     return {
         getsingle: function($scope) {
             return  $http({
@@ -331,13 +327,13 @@ gqApp.factory('getsingle', function($http){
                     });
         }
     };
-});
+}]);
 gqApp.factory('childcatsfilterService', ['$filter', function($filter) {
   return function(data) {
     return $filter('childcatsfilter')(data);
   };
 }]);
-gqApp.factory('getcatsparent', function($http) {
+gqApp.factory('getcatsparent',['$http',  function($http) {
     return {
         getcatsparent: function(){
             return  $http({
@@ -348,21 +344,20 @@ gqApp.factory('getcatsparent', function($http) {
         }
 
     };
-});
-gqApp.factory('getcatschild', function($http) {
+}]);
+gqApp.factory('getcatschild', ['$http', function($http) {
     return {
         getcatschild: function(){
             return  $http({
                         method: 'GET',
                         url: '/wp-admin/admin-ajax.php',
-                        data: $scope,
                         params: { 'action': 'cats_child_loop' }
                     });
         }
 
     };
-});
-gqApp.factory('getcatsparent', function($http) {
+}]);
+gqApp.factory('getcatsparent',['$http',  function($http) {
     return {
         getcatsparent: function(){
             return  $http({
@@ -373,15 +368,15 @@ gqApp.factory('getcatsparent', function($http) {
         }
 
     };
-});
+}]);
 /**Filters**/
-gqApp.filter("minmaxfilter", function() {
-  return function(items, from, to, title) {
+gqApp.filter('minmaxfilter',[ function() {
+  return function(items, from, to) {
         var from = parseInt(from);
         var to = parseInt(to);
         var result = [];
-        angular.forEach(items, function(value, key){
-            if(value.ring_gauge != "NULL"){
+        angular.forEach(items, function(value){
+            if(value.ring_gauge !== 'NULL'){
                 var price = parseInt(value.ring_gauge);
                 if(price >= from && price <= to){
                     result.push(value);
@@ -393,40 +388,42 @@ gqApp.filter("minmaxfilter", function() {
 
         return result;
   };
-});
+}]);
 //Used for slider on selling listings loop
-gqApp.filter("fractionit", function() {
+gqApp.filter('fractionit',[ function() {
   return function(numb) {
     //var Fraction = require('fractional').Fraction;
             function fraction(numb){
-                var numb        = numb.toString();
-                var getpredec   = numb.split(".");
-                var getdecimal  = parseFloat( "0." + getpredec[1] );
+                var number      = numb.toString();
+                var getpredec   = number.split('.');
+                var getdecimal  = parseFloat( '0.' + getpredec[1] );
                 var frac        = getdecimal;
                 var returnvalue = frac * 8;
-                var concat      = returnvalue.toString() + "/8";
+                var concat      = returnvalue.toString() + '/8';
                 return concat;
             }
-            var returnfac = "numb";
+            var returnfac   = 'numb';
             var numb        = numb.toString();
-            var getpredec   = numb.split(".");
+            var getpredec   = numb.split('.');
+
             if(getpredec.length > 1){
 
-                    var returnfac   = getpredec[0] + " " + fraction(numb) + '"';
+                    var returnfac   = getpredec[0] + ' ' + fraction(numb) + '"';
                     return returnfac;
-                }else{
+
+            }else{
                     return numb + '"';
-                }
+            }
 
   };
-});
-gqApp.filter("minmaxfilterlength", function() {
-  return function(items, from, to, title) {
+}]);
+gqApp.filter('minmaxfilterlength',[ function() {
+  return function(items, from, to) {
         var from = parseInt(from);
         var to = parseInt(to);
         var result = [];
-        angular.forEach(items, function(value, key){
-            if(value.cigar_length != "NULL"){
+        angular.forEach(items, function(value){
+            if(value.cigar_length !== 'NULL'){
                 var price = parseInt(value.cigar_length);
                 if(price >= from && price <= to){
                     result.push(value);
@@ -439,12 +436,12 @@ gqApp.filter("minmaxfilterlength", function() {
 
         return result;
   };
-});
+}]);
 /**Directive*/
-gqApp.directive("markable", function() {
+gqApp.directive('markable',[ function() {
     return {
-        link: function(scope, elem, attrs) {
-            elem.on("click", function() {
+        link: function(scope, elem) {
+            elem.on('click', function() {
                 if(elem.hasClass('success')){
                     elem.removeClass('success');
                 }else{
@@ -453,18 +450,17 @@ gqApp.directive("markable", function() {
             });
         }
     };
-});
-
+}]);
 gqApp.directive('filterterms',['$location', function(location){
     // Runs during compile
     return {
         restrict: 'C', // E = Element, A = Attribute, C = Class, M = Comment
-        link: function($scope, iElm, iAttrs, controller) {
+        link: function($scope, iElm) {
                     // DO SOMETHING
             var geturl       = location.url().replace('/', '');
             var parseurl     = geturl.split('&');
-            angular.forEach(parseurl, function(value, key){
-              if(value != ""){
+            angular.forEach(parseurl, function(value){
+              if(value !== ''){
 
                   var checkclass   = iElm.context.className.indexOf(value);
 
@@ -482,24 +478,24 @@ gqApp.directive('filterterms',['$location', function(location){
     };
 }]);
 //watch menu ng-repeat so we can resize:D
-gqApp.directive('onFinishRender', function ($timeout) {
+gqApp.directive('onFinishRender',['$timeout', function ($timeout) {
     return {
         restrict: 'A',
-        link: function (scope, element, attr) {
-            if (scope.$last === true) {
+        link: function ($scope) {
+            if ($scope.$last === true) {
                 $timeout(function () {
-                    scope.$emit('ngRepeatFinished');
+                    $scope.$emit('ngRepeatFinished');
                 });
             }
         }
-    }
-});
+    };
+}]);
 //on page load get the default megamenu item
-gqApp.directive('activeone', function(getmegamenu, usSpinnerService, getmegamenuhtml){
+gqApp.directive('activeone',['getmegamenu', 'usSpinnerService', 'getmegamenuhtml', function(getmegamenu, usSpinnerService, getmegamenuhtml){
       // Runs during compile
       return {
           restrict: 'C', // E = Element, A = Attribute, C = Class, M = Comment
-          link: function ($scope, iElm, iAttrs, controller) {
+          link: function ($scope, iElm) {
             if($(iElm[0]).hasClass('notab')){
 
             }else if($(iElm[0]).hasClass('customhtml')){
@@ -510,16 +506,14 @@ gqApp.directive('activeone', function(getmegamenu, usSpinnerService, getmegamenu
               $scope.postID = getID;
               //Shop loop
               getmegamenuhtml.getmegamenuhtml($scope)
-                  .success(function(data, status, headers, config){
+                  .success(function(data){
 
                       $scope.hidehtml = false;
                       $scope.hideloop = true;
                       $scope.datahtml = data;
                       usSpinnerService.stop('spinmenu');
-                      console.log(data);
-
               })
-              .error(function(data, status, headers, config) {
+              .error(function() {
                 $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
 
               });
@@ -537,13 +531,12 @@ gqApp.directive('activeone', function(getmegamenu, usSpinnerService, getmegamenu
               $scope.megacat = gethref;
               //Shop loop
               getmegamenu.getmegamenu($scope)
-                  .success(function(data, status, headers, config){
+                  .success(function(data){
                       $scope.catloopmegamenu = data;
                       usSpinnerService.stop('spinmenu');
-                      console.log(data);
 
               })
-              .error(function(data, status, headers, config) {
+              .error(function() {
                 $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
 
               });
@@ -552,13 +545,13 @@ gqApp.directive('activeone', function(getmegamenu, usSpinnerService, getmegamenu
 
           }
     };
-});
+}]);
 //watch click on megamenu item
-gqApp.directive('megamenutab', function(getmegamenu, usSpinnerService, getmegamenuhtml){
+gqApp.directive('megamenutab', ['getmegamenu', 'usSpinnerService', 'getmegamenuhtml', function(getmegamenu, usSpinnerService, getmegamenuhtml){
     // Runs during compile
     return {
         restrict: 'C', // E = Element, A = Attribute, C = Class, M = Comment
-        link: function($scope, iElm, iAttrs, controller) {
+        link: function($scope, iElm) {
 
             var getlink = $(iElm[0]).find('a');
 
@@ -579,16 +572,14 @@ gqApp.directive('megamenutab', function(getmegamenu, usSpinnerService, getmegame
                 $scope.postID = getID;
                 //Shop loop
                 getmegamenuhtml.getmegamenuhtml($scope)
-                    .success(function(data, status, headers, config){
+                    .success(function(data){
 
                         $scope.hidehtml = false;
                         $scope.hideloop = true;
                         $scope.datahtml = data;
                         usSpinnerService.stop('spinmenu');
-                        console.log(data);
-
                 })
-                .error(function(data, status, headers, config) {
+                .error(function() {
                   $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
 
                 });
@@ -604,7 +595,7 @@ gqApp.directive('megamenutab', function(getmegamenu, usSpinnerService, getmegame
                 $scope.megacat = gethref;
                 //Shop loop
                 getmegamenu.getmegamenu($scope)
-                    .success(function(data, status, headers, config){
+                    .success(function(data){
 
                         $scope.hidehtml = true;
                         $scope.hideloop = false;
@@ -612,7 +603,7 @@ gqApp.directive('megamenutab', function(getmegamenu, usSpinnerService, getmegame
                         usSpinnerService.stop('spinmenu');
 
                 })
-                .error(function(data, status, headers, config) {
+                .error(function() {
                   $scope.errormsg = '<h1> refresh the page and try again please.</h1>';
 
                 });
@@ -620,8 +611,7 @@ gqApp.directive('megamenutab', function(getmegamenu, usSpinnerService, getmegame
             });
         }
     };
-});
-
+}]);
 /**Config*/
 gqApp.config(['usSpinnerConfigProvider', function (usSpinnerConfigProvider) {
     usSpinnerConfigProvider.setDefaults({

@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         // If you can't get source maps to work, run the following command in your terminal:
         // $ sass scss/foundation.scss:css/foundation.css --sourcemap
         // (see this link for details: http://thesassway.com/intermediate/using-source-maps-with-sass )
-        sourceMap: false
+        sourceMap: true
       },
 
       dist: {
@@ -73,7 +73,7 @@ module.exports = function(grunt) {
           'js/vendor/jquery.selectBox.min.js',
           'js/vendor/jquery.yith-wcwl.js',
           // Using all of your custom js files
-          //'js/custom/*.js'
+          'js/custom/*.js'
 
           ],
           // Concat all the files above into one single file

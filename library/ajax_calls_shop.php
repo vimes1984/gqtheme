@@ -26,6 +26,10 @@ class ajaxclass{
 	 */
 	protected $version = "1.0.0";
 
+/**
+ *
+ */
+	public $exchangerate = '';
 	/**
 	 * Unique identifier for your plugin.
 	 *
@@ -63,6 +67,8 @@ class ajaxclass{
 	 */
 	public function __construct() {
 				// Load plugin text domain
+		//Set exchangerate cookie defined in library/custom-functions.php
+		$this->exchangerate = json_decode( base64_decode($_COOKIE['exchange_rate']) );
 		//shop page and categories
 		add_action('wp_ajax_nopriv_cats_loop', array($this, 'cats_loop') );
 		add_action( 'wp_ajax_cats_loop', array($this,  'cats_loop') );
@@ -391,20 +397,18 @@ class ajaxclass{
 			$catpreg  	= preg_match('#/c/(.*)/#', $reffer, $matches);
 			$exploded 		= explode("/", $reffer );
 			$catslug		= end($exploded);
-		*/
-				$request_body 	= file_get_contents( 'php://input' );
-
-				$args 					= array( 'post_type' => 'product', 'product_cat' => $request_body, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
-
 				//not in use but may need to be...
-				/*
 			if($cat != ''){
 				$args 					= array( 'post_type' => 'product', 'product_cat' => $cat, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
 			}else{
 				$args 					= array( 'post_type' => 'product', 'product_cat' => $matches[1], 'posts_per_page' => '-1', 'post_status'=> 'publish' );
 
 			}
-			*/
+		*/
+				$request_body 	= file_get_contents( 'php://input' );
+
+			$args 					= array( 'post_type' => 'product', 'product_cat' => $request_body, 'posts_per_page' => '-1', 'post_status'=> 'publish' );
+
     	$decodeit     	= json_decode( $request_body );
 			$query 					= new WP_Query( $args );
 	  	$justmeta 			= array( );
@@ -533,64 +537,176 @@ class ajaxclass{
 	 *
 	 */
 	public function get_product_variations($prod_id){
-		$product 		= get_product( $prod_id );
+		$product 			= get_product( $prod_id );
 		$variations 	= $product->get_available_variations();
 		$fresharray 	= array();
 		foreach ($variations as $key => $value) {
 			# code...
-			//var_dump($value);
-			if($value["price_html"]){
+			if($value["display_price"]){
 
-				$fresharray[$key] = $value["price_html"];
+				$fresharray[$key] = $value["display_price"];
 
 			}
 
 		}
-		$clear = preg_replace("/[^0-9,.]/", '', strip_tags($fresharray[1]));
+
+		$clear =  min($fresharray);
 		return $clear;
 	}
 	public function check_if_sale(){
 
 
 	}
+
+	/**
+		* Get Currency
+		*/
+	public function get_currency_value(){
+			//get the default values
+			$defaultcurrency = get_option('default_currency');
+
+			$currency = isset($_COOKIE["currency_converter"]) ? $_COOKIE["currency_converter"] : $defaultcurrency;
+
+			return $currency;
+
+	}
+	/**
+		* Get Currency
+		*/
+	public function get_vat_value(){
+			//get the default values
+			$defaultcurrency = get_option('default_vatrate');
+
+			$currency = isset($_COOKIE["vat_value"]) ? $_COOKIE["vat_value"] : $defaultcurrency;
+
+			return $currency;
+
+	}
+	/**
+	 * Returns symbol
+	 */
+	public function get_currency_symbol(){
+		$currency = $this->get_currency_value();
+
+		switch ($currency) {
+			case 'USD':
+				# code...
+				$symbol = '$';
+				break;
+			case 'EUR':
+					# code...
+					$symbol = '€';
+				break;
+			case 'GBP':
+						# code...
+						$symbol = '£';
+				break;
+			case 'AUD':
+						# code...
+
+						$symbol = '$';
+				break;
+			case 'JPY':
+						# code...
+
+						$symbol = '¥';
+				break;
+			default:
+						# code...
+
+						$symbol = '£';
+				break;
+		}
+		return $symbol;
+	}
+	/**
+	 * Convert price
+	 */
+		public function convert_price($price){
+
+			$defaultcurrency 		= 	get_option('default_currency');
+			$currency 					= 	$this->get_currency_value();
+			$vat 								= 	$this->get_vat_value();
+			//Switch the currency
+			if($currency != $defaultcurrency){
+
+				$convertedprice = round( $price * $this->exchangerate->rate, 2, PHP_ROUND_HALF_UP);
+
+			}else{
+				$convertedprice = round( $price, 2, PHP_ROUND_HALF_UP);
+			}
+			//VAT rates
+			$convertedprice = round($convertedprice / $vat, 2, PHP_ROUND_HALF_UP);
+
+			return $convertedprice;
+		}
 	/**
 	 *
 	 */
 	public 	function get_product_price($prod_id, $productType, $onsale = false){
-		$ID 			= $prod_id;
-		$price 			= '';
-		$arrayreturn 	= array();
-
+		$ID 								= 	$prod_id;
+		$price 							= 	'';
+		$arrayreturn 				= 	array();
+		$symbol 						= 	$this->get_currency_symbol();
 		if($productType == 'simple'){
 
-			$price = get_post_meta( $ID, '_regular_price', single );
-			$arrayreturn 	= array('price' => $price,'type' => 'simple','onsale' => $onsale );
+						$price = get_post_meta( $ID, '_regular_price', single );
 
-			return $arrayreturn;
+						$convertedprice = $this->convert_price($price);
+
+						$arrayreturn 	= array(
+							'price' 					=> $convertedprice,
+							'exchange_rate'		=> $this->exchangerate,
+							'type' 						=> 'simple',
+							'onsale' 					=> $onsale,
+							'symbol' 					=> $symbol
+							);
+
+						return $arrayreturn;
 
 
 
 		}elseif ($productType == 'variable' && $checksample) {
 
-			$price 	= $this->get_product_variations( $prod_id );
+						$price 					= $this->get_product_variations( $prod_id );
+						$convertedprice = $this->convert_price($price);
 
-			$arrayreturn 	= array('price' => $price,'type' => 'tobbaco_sample' );
+						$arrayreturn 	= array(
+							'price' 					=> $convertedprice,
+							'exchange_rate'		=> $this->exchangerate,
+							'type' 						=> 'tobbaco_sample',
+							'symbol' 					=> $symbol
+							);
 
-			return $arrayreturn;
+						return $arrayreturn;
 
 		}elseif ($productType == 'variable') {
 
-			$price = get_post_meta( $ID, '_min_variation_price', single );
-			$arrayreturn 	= array('price' => $price,'type' => 'variable' );
+						$price 					= $this->get_product_variations( $prod_id );
+						$convertedprice = $this->convert_price($price);
 
-			return $arrayreturn;
+						$arrayreturn 	= array(
+							'price' 					=> $convertedprice,
+							'exchange_rate'		=> $this->exchangerate,
+							'type' 						=> 'variable',
+							'symbol' 					=> $symbol
+							);
+
+						return $arrayreturn;
 
 		}else{
 
-			$price = get_post_meta( $ID, '_regular_price', single );
-			$arrayreturn 	= array('price' => $price,'type' => 'default' );
+						$price 					= get_post_meta( $ID, '_regular_price', single );
+						$convertedprice = $this->convert_price($price);
 
-			return $arrayreturn;
+						$arrayreturn 	= array(
+							'price' 					=> $convertedprice,
+							'type' 						=> 'default',
+							'exchange_rate'		=> $this->exchangerate,
+							'symbol' 					=> $symbol
+							);
+
+						return $arrayreturn;
 
 		}
 

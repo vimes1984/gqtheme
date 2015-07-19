@@ -514,7 +514,7 @@ $topbar-dropdown-arrows: true !default; //Set false to remove the \00bb >> text 
 
       // Styling for list items that have a dropdown within them.
       .has-dropdown {
-        position: relative;
+        //position: relative;
 
         & > a {
           &:after {
@@ -629,7 +629,7 @@ $topbar-dropdown-arrows: true !default; //Set false to remove the \00bb >> text 
       .top-bar-section {
         @include single-transition(none,0,0);
         #{$default-float}: 0 !important;
-
+        padding: 0;
         ul {
           width: auto;
           height: auto;

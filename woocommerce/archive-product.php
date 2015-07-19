@@ -41,9 +41,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 										</div>
 										<div class="large-3 columns">
 
-											<h4 class="price_title" ng-if="product.price.type == 'variable'">From: &pound;{{product.price.price}}</h4>
-											<h4 class="price_title" ng-if="product.price.type == 'tobbaco_sample'">From: &pound;{{product.price.price}}</h4>
-											<h4 class="price_title" ng-if="product.price.type == 'simple'">&pound;{{product.price.price}}</h4>
+											<h4 class="price_title" ng-if="product.price.type == 'variable'">From: {{product.price.symbol}}{{product.price.price}}</h4>
+											<h4 class="price_title" ng-if="product.price.type == 'tobbaco_sample'">From: {{product.price.symbol}}{{product.price.price}}</h4>
+											<h4 class="price_title" ng-if="product.price.type == 'simple'">{{product.price.symbol}}{{product.price.price}}</h4>
 										</div>
 									</div>
 									<div class="row" ng-if="product.wpcf_show_attributes === 'yes'">
