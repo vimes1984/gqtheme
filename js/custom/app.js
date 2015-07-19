@@ -9,8 +9,64 @@
 	  $(document).foundation('joyride','start');
 	});
 	jQuery(document).foundation();
+  //carousels
+  $('#owl-example').owlCarousel(
+    {
+        items : 4, //10 items above 1000px browser width
+        loop: false,
+        navText: ['<span class=\"prev\"></span>','<span class=\"next\"></span>'],
+        dots: false,
+        nav: true,
+        responsive:{
+                      0:{
+                          items:2,
+                          nav: false,
+                      },
+                      600:{
+                          items:3,
+                          nav: false,
+                      },
+                      1000:{
+                          items:4,
 
+                      }
+                    },
+    }
+  );
 
+  var owl = $('#owl-demo');
+
+  owl.owlCarousel({
+      autoplay: true, //Set AutoPlay to 3 seconds
+      nav: false,
+      loop: true,
+      dots: true,
+      responsive:{
+                    0:{
+                        items:1,
+                    },
+                    600:{
+                        items:3,
+                    },
+                    1000:{
+                        items:4,
+                    }
+                  },
+  });
+  //zoom plugins
+  $('.images > a').zoom({
+    on: 'mouseover',
+    url: $('.attachment-shop_single').parent('.woocommerce-main-image').attr('data-large-image'),
+  });
+  $('.thumbnailsowl .owl-item > div > a > img ').on('click', function(){
+    event.preventDefault();
+    var mainimage = $('.images > a');
+    var largeimage = $(this).parent('a').attr('href');
+
+    mainimage.attr('href', largeimage);
+    mainimage.children('.attachment-shop_single').attr('src', largeimage);
+    mainimage.children('.zoomImg').attr('src', largeimage);
+  });
 }(jQuery));
 
 var gqApp =  angular.module('gqapp', ['iso.directives', 'angularSpinner', 'ui-rangeSlider', 'img-src-ondemand']);

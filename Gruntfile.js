@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         // If you can't get source maps to work, run the following command in your terminal:
         // $ sass scss/foundation.scss:css/foundation.css --sourcemap
         // (see this link for details: http://thesassway.com/intermediate/using-source-maps-with-sass )
-        sourceMap: true
+        sourceMap: false
       },
 
       dist: {
@@ -62,10 +62,13 @@ module.exports = function(grunt) {
           'js/vendor/angular.min.js',
           'js/vendor/masonry.pkgd.min.js',
           'js/vendor/angular-isotope.min.js',
+          'bower_components/jquery-zoom/jquery.zoom.min.js',
           'js/vendor/spin.js',
           'js/vendor/angular-spinner.min.js',
           'js/vendor/angular.rangeSlider.js',
           'js/vendor/img-src-ondemand.js',
+          //This is version 2.0 the css has been moved to _settings.scss
+          'js/vendor/owl.carousel.min.js',
           //woo stuff
           'js/vendor/woo/*.js',
 
@@ -86,7 +89,7 @@ module.exports = function(grunt) {
       dist: {
         files: {
           // Shrink the file size by removing spaces
-          'js/foundation.js': ['js/foundation.js']
+          //'js/foundation.js': ['js/foundation.js']
         }
       }
     },

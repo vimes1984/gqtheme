@@ -4,9 +4,11 @@
     "css/foundation.css",
     "js/foundation.js"
   ],
-  "ignore": [
-  ],
+  "ignore": [],
   "dependencies": {
     "foundation": "zurb/bower-foundation"
+  },
+  "devDependencies": {
+    "jquery-zoom": "~1.7.14"
   }
 }
