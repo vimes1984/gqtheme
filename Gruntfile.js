@@ -44,7 +44,7 @@ module.exports = function(grunt) {
 
           // Pick the componenets you need in your project
           //'bower_components/foundation/js/foundation/foundation.abide.js',
-          //'bower_components/foundation/js/foundation/foundation.accordion.js',
+          'bower_components/foundation/js/foundation/foundation.accordion.js',
           //'bower_components/foundation/js/foundation/foundation.alert.js',
           //'bower_components/foundation/js/foundation/foundation.clearing.js',
           //'bower_components/foundation/js/foundation/foundation.dropdown.js',

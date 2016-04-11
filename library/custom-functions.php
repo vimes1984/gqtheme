@@ -268,19 +268,23 @@ function display_prod_atts(){
 			case 'Ring Gauge':
 				break;
 			default:
-				echo "<h4>" . $key  . "</h4>" ;
+  echo '<ul class="accordion" data-accordion>';
+      echo '<li class="accordion-navigation">';
+				echo "<a href='#". preg_replace('/\s*/', '', strtolower($key))  ."'><h4>" . $key  . "</h4></a>" ;
+          echo '<div id="'.preg_replace('/\s*/', '', strtolower($key)).'" class="content">';
 		        echo "<ul class='catfilter' ok-key='filter' opt-kind=''>";
 					foreach ($value as $keysub => $valuesub) {
 							# code...
 						echo '<li ng-click="chaindedfilters(\''.$keysub.'\')" class="filterterms '.$keysub.'" markable>' . $valuesub['name'] . '</li>';
 					}
-
 				echo "</ul>";
+        echo "</div>";
+      echo '</li>';
+  echo '</ul>';
 				break;
 		}
 
 	}
-
 }
 
 
